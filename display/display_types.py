@@ -20,7 +20,6 @@ class StationMainDisplay(Display):
         try:
             printer.printMainDisplay(msg)
         except:
-            print("error printing")
             pass
 
 

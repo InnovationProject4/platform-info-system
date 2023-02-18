@@ -10,7 +10,7 @@ The goal of this project is to develop a train station display board system. The
 
 The system retrieves rail traffic information from Digitraffic's services and uses MQTT protocol to distribute the information to different displays at railway stations.
 
-![data flow diagram](doc/diagrams/data_flow_diagram.)
+![data flow diagram](doc/diagrams/data_flow_diagram.png)
 
 ### MQTT topic naming convention
 Data for main display

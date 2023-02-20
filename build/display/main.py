@@ -1,13 +1,35 @@
 import display_types as types
 import mqtt_connection as mqtt
+import argparse
 
 # List contains all stations whose data is currently published
 # This data can be obtained from the Management node e.g with MQTT topic "station/codes"
 # OR just keep it hardcoded?
 stationcodes = ["PSL", "HKI"]
 
+parser = argparse.ArgumentParser(description='sets the correct display')
+parser.add_argument('--s', type=str, help='enter station short code')
+parser.add_argument('--t', type=str, help='enter platform number or "main" for main display')
+args = parser.parse_args()
 
-def initializeDisplay():
+
+# Checks if user has set inputs with argparse
+# If not it takes input from user
+def initialize():
+    if args.s is None and args.t is None:
+        takeInput()
+    else:
+        args_station = args.s
+        args_display_type = args.t
+        if args_display_type == 'main':
+            display = types.StationMainDisplay()
+        else:
+            display = types.PlatformDisplay(args_display_type)
+
+        mqtt.createConnection(display.getTopic(args_station), display)
+
+
+def takeInput():
     print(f"Enter a station : {stationcodes} (case sensitive)")
     while True:
         station = input()
@@ -38,5 +60,4 @@ def initializeDisplay():
 
 
 if __name__ == '__main__':
-    initializeDisplay()
-
+    initialize()

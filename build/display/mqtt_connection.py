@@ -1,20 +1,30 @@
 import paho.mqtt.client as paho
-import sys
 import os
 
 display = None
+MQTT_TOPIC = []
+
 
 # Is called on every new MQTT message
 def onMessage(client, data, msg):
     global display
-    display.printDisplay(msg.payload.decode())
+    global MQTT_TOPIC
+
+    if msg.topic == MQTT_TOPIC[0][0]:
+        display.printDisplay(msg.payload.decode())
+    elif msg.topic == MQTT_TOPIC[1][0]:
+        display.printWarning(msg.payload.decode())
+
+
+def onConnect(client, userdata, flags, rc):
+    if rc != 0:
+        print("Connection failed: ", rc)
+
 
 client = paho.Client()
 client.on_message = onMessage
+client.on_connect = onConnect
 
-if client.connect("localhost", 1883, 60) != 0:
-    print("Error in connection")
-    sys.exit(-1)
 
 def createConnection(topic, new_display):
     global display
@@ -23,13 +33,13 @@ def createConnection(topic, new_display):
     print(f"Current topic: {topic}")
     print("Display initialized. CTRL + Z to exit")
 
-    client.subscribe(topic)
+    global MQTT_TOPIC
+    MQTT_TOPIC = [(topic, 1), ("station/" + display.station + "/warning", 1)]
+
+    client.subscribe(MQTT_TOPIC)
 
     try:
         client.loop_forever()
     except:
         client.disconnect()
         print("Error has occured")
-
-
-

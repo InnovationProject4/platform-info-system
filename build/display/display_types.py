@@ -12,9 +12,17 @@ class Display(ABC):
     def getTopic(self, station):
         pass
 
+    def printWarning(self, msg):
+        #Color red with ANSI code
+        print(f"\033[91m{msg} \033[00m")
+        pass
+
 
 # Provides information about all trains arriving at the station (departing time, possible delay, platform, train number, destination)
 class StationMainDisplay(Display):
+
+    def __init__(self, station):
+        self.station = station
 
     def printDisplay(self, msg):
         try:
@@ -22,15 +30,16 @@ class StationMainDisplay(Display):
         except:
             pass
 
-
     def getTopic(self, station):
         return f"station/{station}/main"
+
 
 # Provides information about the next 10 trains arriving to the platform (departing time, possible delay, train number, destination)
 class PlatformDisplay(Display):
 
-    def __init__(self, platform_number):
+    def __init__(self, station, platform_number):
         self.platform_number = platform_number
+        self.station = station
 
     def printDisplay(self, msg):
         try:

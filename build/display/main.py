@@ -22,9 +22,9 @@ def initialize():
         args_station = args.s
         args_display_type = args.t
         if args_display_type == 'main':
-            display = types.StationMainDisplay()
+            display = types.StationMainDisplay(args_station)
         else:
-            display = types.PlatformDisplay(args_display_type)
+            display = types.PlatformDisplay(args_station, args_display_type)
 
         mqtt.createConnection(display.getTopic(args_station), display)
 
@@ -46,12 +46,12 @@ def takeInput():
             print('Please enter an integer')
             continue
         if display_type == 1:
-            display = types.StationMainDisplay()
+            display = types.StationMainDisplay(station)
             break
         elif display_type == 2:
             print("Enter platform number")
             platform = input()
-            display = types.PlatformDisplay(platform)
+            display = types.PlatformDisplay(station, platform)
             break
         else:
             print("Invalid input")

@@ -1,7 +1,6 @@
 import json
 import sys
 import time
-
 import paho.mqtt.client as paho
 
 client = paho.Client()

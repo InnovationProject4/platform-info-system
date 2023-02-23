@@ -1,13 +1,10 @@
 import json
-import sys
 import time
 import paho.mqtt.client as paho
 
 client = paho.Client()
 
-if client.connect("localhost", 1883, 60) != 0:
-    print("Error in connection")
-    sys.exit(-1)
+client.connect("localhost", 1883, 60)
 
 test_data_pasila_main_display = {
     'station': 'Pasila',

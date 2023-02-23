@@ -9,7 +9,6 @@ MQTT_TOPIC = []
 def onMessage(client, data, msg):
     global display
     global MQTT_TOPIC
-
     if msg.topic == MQTT_TOPIC[0][0]:
         display.printDisplay(msg.payload.decode())
     elif msg.topic == MQTT_TOPIC[1][0]:
@@ -31,15 +30,15 @@ def createConnection(topic, new_display):
     display = new_display
     os.system('cls' if os.name == 'nt' else 'clear')
     print(f"Current topic: {topic}")
-    print("Display initialized. CTRL + Z to exit")
+    print("Display initialized. CTRL + C to exit")
 
     global MQTT_TOPIC
     MQTT_TOPIC = [(topic, 1), ("station/" + display.station + "/warning", 1)]
 
+    client.connect("localhost", 1883, 60)
     client.subscribe(MQTT_TOPIC)
 
     try:
         client.loop_forever()
-    except:
+    except KeyboardInterrupt:
         client.disconnect()
-        print("Error has occured")

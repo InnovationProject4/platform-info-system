@@ -12,6 +12,10 @@ class Display(ABC):
     def getTopic(self, station):
         pass
 
+    @abstractmethod
+    def getType(self):
+        pass
+
     def printWarning(self, msg):
         #Color red with ANSI code
         print(f"\033[91m{msg} \033[00m")
@@ -21,17 +25,22 @@ class Display(ABC):
 # Provides information about all trains arriving at the station (departing time, possible delay, platform, train number, destination)
 class StationMainDisplay(Display):
 
-    def __init__(self, station):
+    def __init__(self, station, msg=None):
         self.station = station
+        self.msg = msg
 
     def printDisplay(self, msg):
         try:
+            self.msg = msg
             printer.printMainDisplay(msg)
         except:
             pass
 
     def getTopic(self, station):
         return f"station/{station}/main"
+
+    def getType(self):
+        return 'MAIN'
 
 
 # Provides information about the next 10 trains arriving to the platform (departing time, possible delay, train number, destination)
@@ -49,3 +58,6 @@ class PlatformDisplay(Display):
 
     def getTopic(self, station):
         return f"station/{station}/{self.platform_number}"
+
+    def getType(self):
+        return 'PLATFORM'

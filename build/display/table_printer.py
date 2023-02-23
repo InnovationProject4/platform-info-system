@@ -3,9 +3,14 @@ import os
 
 from tabulate import tabulate
 
+global formatted
+formatted = []
+
 
 def printPlatformDisplay(msg):
+    print("r")
     data = json.loads(msg)
+    global formatted
     formatted = []
     for x in data['trains']:
         if x['notice'] == '':
@@ -18,7 +23,9 @@ def printPlatformDisplay(msg):
 
 
 def printMainDisplay(msg):
+    print("o")
     data = json.loads(msg)
+    global formatted
     formatted = []
     for x in data['trains']:
         if x['notice'] == '':

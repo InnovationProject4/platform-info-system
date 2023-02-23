@@ -17,8 +17,7 @@ class Display(ABC):
         pass
 
     def printWarning(self, msg):
-        #Color red with ANSI code
-        print(f"\033[91m{msg} \033[00m")
+        printer.printWarningOnDisplay(msg)
         pass
 
 

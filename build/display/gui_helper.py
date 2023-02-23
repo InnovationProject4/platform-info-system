@@ -20,18 +20,18 @@ def configureGrid(d_type, frame, grid):
 
 def fillGrid(d_type, frame):
     rows = 10
-    Label(frame, text="Time", font=50, bg="white").grid(row=0, column=0, sticky="NSEW")
-    Label(frame, text="Notice", font=50, bg="white").grid(row=0, column=1, sticky="NSEW")
+    Label(frame, text="Time", font=('Calibri Light', 16), bg="white").grid(row=0, column=0, sticky="NSEW")
+    Label(frame, text="Notice", font=('Calibri Light', 16), bg="white").grid(row=0, column=1, sticky="NSEW")
 
     if d_type == 'MAIN':
         columns = 4
-        Label(frame, text="Platform", font=50, bg="white").grid(row=0, column=2, sticky="NSEW")
-        Label(frame, text="Train", font=50, bg="white").grid(row=0, column=3, sticky="NSEW")
-        Label(frame, text="Destination", font=50, bg="white").grid(row=0, column=4, sticky="NSEW")
+        Label(frame, text="Platform", font=('Calibri Light', 16), bg="white").grid(row=0, column=2, sticky="NSEW")
+        Label(frame, text="Train", font=('Calibri Light', 16), bg="white").grid(row=0, column=3, sticky="NSEW")
+        Label(frame, text="Destination", font=('Calibri Light', 16), bg="white").grid(row=0, column=4, sticky="NSEW")
     elif d_type == 'PLATFORM':
         columns = 3
-        Label(frame, text="Train", font=50, bg="white").grid(row=0, column=2, sticky="NSEW")
-        Label(frame, text="Destination", font=50, bg="white").grid(row=0, column=3, sticky="NSEW")
+        Label(frame, text="Train", font=('Calibri Light', 16), bg="white").grid(row=0, column=2, sticky="NSEW")
+        Label(frame, text="Destination", font=('Calibri Light', 16), bg="white").grid(row=0, column=3, sticky="NSEW")
     else:
         return
 

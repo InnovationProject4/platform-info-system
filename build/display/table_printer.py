@@ -3,15 +3,26 @@ import os
 
 from tabulate import tabulate
 
-global formatted
+# Variables storing information for GUI
 formatted = []
+display_name = ''
+warning_message = ''
+
+
+def printWarningOnDisplay(msg):
+    global warning_message
+    warning_message = msg
+    # Color red with ANSI code
+    print(f"\033[91m{msg} \033[00m")
 
 
 def printPlatformDisplay(msg):
-    print("r")
     data = json.loads(msg)
     global formatted
     formatted = []
+    global display_name
+    display_name = data["platform"]
+
     for x in data['trains']:
         if x['notice'] == '':
             formatted.append([x['time'], x['notice'], x['train'], x['destination']])
@@ -23,10 +34,12 @@ def printPlatformDisplay(msg):
 
 
 def printMainDisplay(msg):
-    print("o")
     data = json.loads(msg)
     global formatted
     formatted = []
+    global display_name
+    display_name = data["station"]
+
     for x in data['trains']:
         if x['notice'] == '':
             formatted.append([x['time'], x['notice'], x['platform'], x['train'], x['destination']])

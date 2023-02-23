@@ -1,5 +1,5 @@
 from messaging.request import rata
-import timeç‹
+import time
 
 '''
     connection to rata.digitraffic via https/api
@@ -16,6 +16,7 @@ def initialize():
         print("successful fetching"), 
         print(response.json())
         
+
         
     )).onFailure(lambda response, status, data : (
         print(f"Error: {status}") if status == 400 else print(f"Internal Error: {status}"),

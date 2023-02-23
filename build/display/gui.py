@@ -4,6 +4,7 @@ import display_types as types
 import mqtt_connection as mqtt
 import gui_helper
 import argparse
+import table_printer as tp
 
 parser = argparse.ArgumentParser(description='sets the correct display')
 parser.add_argument('--s', type=str, help='enter station short code')
@@ -53,7 +54,6 @@ class App(threading.Thread):
         labels = gui_helper.fillGrid(display.getType(), main_frame)
 
         def update():
-            import table_printer as tp
             data = tp.formatted
             train = 0
             info = 0

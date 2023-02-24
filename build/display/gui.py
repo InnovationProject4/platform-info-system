@@ -52,8 +52,12 @@ class App(threading.Thread):
 
         main_frame = Frame(self.root, bg='#0a4a70')
 
-        warning_label = Label(self.root, text="", fg='red', bg='#0a4a70', font=('Calibri Light', 15))
-        warning_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
+        notification_label = Label(self.root, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 15))
+        notification_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
+
+        warning_frame = Frame(self.root, bg='#0a4a70')
+        warning_label = Label(warning_frame, text="", fg='red', bg='#0a4a70', font=('Calibri Light', 15))
+        warning_label.place(relx=0.5, rely=0.5, anchor=CENTER)
 
         gui_helper.configureGrid(display.getType(), main_frame, Grid)
 
@@ -63,6 +67,11 @@ class App(threading.Thread):
             data = tp.formatted
             display_name_label['text'] = tp.display_name
             warning_label['text'] = tp.warning_message
+            if tp.warning_message != '':
+                warning_frame.tkraise()
+            else:
+                main_frame.tkraise()
+            notification_label['text'] = tp.notification_message
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
             train = 0
             info = 0
@@ -82,28 +91,30 @@ class App(threading.Thread):
             w = self.root.winfo_width()
             h = self.root.winfo_height()
             if w > 1500 and h > 500:
-                resizeFonts(40, 40, 40, 35)
+                resizeFonts(40, 40, 40, 35, 35)
                 return
             elif w > 1000 and h > 500:
-                resizeFonts(35, 35, 35, 25)
+                resizeFonts(35, 35, 35, 25, 25)
                 return
             elif w > 600 and h > 400:
-                resizeFonts(25, 25, 25, 15)
+                resizeFonts(25, 25, 25, 15 , 15)
                 return
             elif w > 300 and h > 200:
-                resizeFonts(15, 15, 15, 10)
+                resizeFonts(15, 15, 15, 10, 10)
                 return
 
-        def resizeFonts(s_name, s_warning, s_time, s_trains):
+        def resizeFonts(s_name, s_warning, s_time, s_trains, s_notification):
             display_name_label['font'] = ('Calibri Light', s_name)
+            notification_label['font'] = ('Calibri Light', s_notification)
             warning_label['font'] = ('Calibri Light', s_warning)
             time_label['font'] = ('Calibri Light', s_time)
             for label in labels:
                 label['font'] = ('Calibri Light', s_trains)
 
         top_frame.grid(row=0, column=0, sticky="NSEW")
+        warning_frame.grid(row=1, column=0, sticky="NSEW")
         main_frame.grid(row=1, column=0, sticky="NSEW")
-
+        main_frame.tkraise()
         update()
 
         self.root.mainloop()

@@ -20,6 +20,10 @@ class Display(ABC):
         printer.printWarningOnDisplay(msg)
         pass
 
+    def printNotification(self, msg):
+        printer.printNotificationOnDisplay(msg)
+        pass
+
 
 # Provides information about all trains arriving at the station (departing time, possible delay, platform, train number, destination)
 class StationMainDisplay(Display):

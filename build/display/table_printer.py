@@ -7,6 +7,14 @@ from tabulate import tabulate
 formatted = []
 display_name = ''
 warning_message = ''
+notification_message = ''
+
+
+def printNotificationOnDisplay(msg):
+    global notification_message
+    notification_message = msg
+    # Color blue with ANSI code
+    print(f"\033[34m{msg} \033[00m")
 
 
 def printWarningOnDisplay(msg):

@@ -13,6 +13,8 @@ def onMessage(client, data, msg):
         display.printDisplay(msg.payload.decode())
     elif msg.topic == MQTT_TOPIC[1][0]:
         display.printWarning(msg.payload.decode())
+    elif msg.topic == MQTT_TOPIC[2][0]:
+        display.printNotification(msg.payload.decode())
 
 
 def onConnect(client, userdata, flags, rc):
@@ -33,7 +35,9 @@ def createConnection(topic, new_display):
     print("Display initialized. CTRL + C to exit")
 
     global MQTT_TOPIC
-    MQTT_TOPIC = [(topic, 1), ("station/" + display.station + "/warning", 1)]
+    MQTT_TOPIC = [(topic, 1),
+                  ("station/" + display.station + "/warning", 1),
+                  ("station/" + display.station + "/notification", 1)]
 
     client.connect("localhost", 1883, 60)
     client.subscribe(MQTT_TOPIC)

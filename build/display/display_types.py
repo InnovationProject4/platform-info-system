@@ -28,15 +28,14 @@ class Display(ABC):
 # Provides information about all trains arriving at the station (departing time, possible delay, platform, train number, destination)
 class StationMainDisplay(Display):
 
-    def __init__(self, station, msg=None):
+    def __init__(self, station):
         self.station = station
-        self.msg = msg
 
     def printDisplay(self, msg):
         try:
-            self.msg = msg
             printer.printMainDisplay(msg)
         except:
+            print("Error printing display")
             pass
 
     def getTopic(self, station):
@@ -57,6 +56,7 @@ class PlatformDisplay(Display):
         try:
             printer.printPlatformDisplay(msg)
         except:
+            print("Error printing display")
             pass
 
     def getTopic(self, station):

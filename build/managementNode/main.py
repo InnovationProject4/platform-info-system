@@ -25,19 +25,35 @@ list_of_stations = [
     },
 ]
 
+def publish_station_data(station, data):
+    topic = "station/"+station+"/"+"main"
+    train_data = data_manager.get_commercial_trains(data, MAINDISPLAY_AMOUNT)
+    formatted_data = {
+        "station": station,
+        "trains": train_data
+    }
+    client.publish(topic, json.dumps(train_data), 0
+    )
+
+def publish_platform_data(station, track, data):
+    topic = "station/" +station + "/" + str(track)
+    track_data = data_manager.get_track_data(data, track, PLATFORMDISPLAY_AMOUNT)
+
+    formatted_data = {
+        "platform": track,
+        "trains": track_data
+    }
+    client:publish(topic, json.dumps(track_data), 0)
 
 while True:
     for station in list_of_stations:
-        stationName = station['station']
-        data = data_manager.get_data(stationName, STATION_NAMES)
-        traindata = data_manager.get_commercial_trains(data, MAINDISPLAY_AMOUNT)
-        client.publish("station/"+stationName+"/"+"main", json.dumps(traindata), 0)
-        print("Published data for :", stationName)
+        station_name = station['station']
+        data = data_manager.get_data(station_name, STATION_NAMES)
+        publish_station_data(station_name, data)
 
         for track in station['tracks']:
-            trackdata = data_manager.get_track_data(data, track, PLATFORMDISPLAY_AMOUNT)
-            client.publish("station/" + stationName + "/" + str(track), json.dumps(trackdata), 0)
+            t = str(track)
+            publish_platform_data(station_name, t, data)
+
+        print("Published data for :", station)
     time.sleep(30)
-        
-
-

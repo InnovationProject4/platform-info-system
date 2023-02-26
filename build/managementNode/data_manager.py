@@ -47,9 +47,10 @@ def get_data(station, stations):
                 actual_time = this_stop['actualTime']
             else:
                 actual_time = time
+            notice = ""
             if 'differenceInMinutes' in this_stop:
-                notice = this_stop['differenceInMinutes']
-            else: notice = ""
+                if 'differenceInMinute' in this_stop != 0:
+                    notice = str(this_stop['differenceInMinutes'])
 
             platform = this_stop['commercialTrack']
 
@@ -100,8 +101,6 @@ def get_data(station, stations):
 
 def get_commercial_trains(data, amount):
     sorted_data = sorted(data, key=lambda x: x['time'])
-    for x in sorted_data[:amount]:
-            print("train: ", x['train'], " Time: ", x['time'], " Destination: ", x['destination'])
     return sorted_data[:amount]
 
 def get_track_data(data, track, amount):
@@ -109,5 +108,5 @@ def get_track_data(data, track, amount):
     for train in data:
         if train['platform'] == str(track):
             track_trains.append(train)
-    sorted_data = sorted(track_trains, key= lambda x: x['time'])
+    sorted_data = sorted(track_trains, key=lambda x: x['time'])
     return sorted_data[:amount]

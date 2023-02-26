@@ -32,7 +32,7 @@ def publish_station_data(station, data):
         "station": station,
         "trains": train_data
     }
-    client.publish(topic, json.dumps(train_data), 0
+    client.publish(topic, json.dumps(formatted_data), 0
     )
 
 def publish_platform_data(station, track, data):
@@ -43,7 +43,7 @@ def publish_platform_data(station, track, data):
         "platform": track,
         "trains": track_data
     }
-    client:publish(topic, json.dumps(track_data), 0)
+    client.publish(topic, json.dumps(formatted_data), 0)
 
 while True:
     for station in list_of_stations:

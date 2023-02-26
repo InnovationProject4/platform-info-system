@@ -93,7 +93,7 @@ def get_data(station, stations):
             #if train hasn't Departured
             if real_time > current_time:
                 if commercial_stop:
-                    this_train = {'train': train, 'trainType': trainType, 'trainCategory': train_category, 'commuterId': commuter_id, 'time': time, 'actualTime': actual_time, 'notice': notice, 'platform': platform, 'destination': destination}
+                    this_train = {'train': train, 'trainType': trainType, 'trainCategory': train_category, 'commuterID': commuter_id, 'time': time, 'actualTime': actual_time, 'notice': notice, 'platform': platform, 'destination': destination}
                     trains.append(this_train)
         return trains
 

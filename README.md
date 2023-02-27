@@ -61,17 +61,17 @@ pip3 install paho-mqtt tabulate pytz
 ```
 Navigate to the folder "build\display" and choose to run on console or with GUI
 
-##### Running in console (not recommended) :
+#### Running in console (not recommended) :
 ```sh
 python3 main.py
 ```
-##### Running with Tkinter GUI:
+#### Running with Tkinter GUI:
 Main display:
 ```sh
 python3 main_display.py --s <station-short-code>
 ```
 Platform display:
 ```sh
-python3 main_display.py --s <station-short-code> --p <platform-number>
+python3 platform_display.py --s <station-short-code> --p <platform-number>
 ```
 >  The parameter "--s" means the station short code e.g "PSL" for Pasila station. The "--p" means the platform number e.g "1"

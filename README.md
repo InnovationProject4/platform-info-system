@@ -1,3 +1,4 @@
+
 # Platform information system
 
 #### ✨Developed at Metropolia's innovation project course for a client at Nokia.✨
@@ -60,12 +61,17 @@ pip3 install paho-mqtt tabulate pytz
 ```
 Navigate to the folder "build\display" and choose to run on console or with GUI
 
- Running in console:
- ```sh
-python3 main.py --s <station-short-code> --t <display-type>
-```
-Running with Tkinter GUI:
+##### Running in console (not recommended) :
 ```sh
-python3 gui.py --s <station-short-code> --t <display-type>
+python3 main.py
 ```
-The parameter "--s" means the station short code e.g "PSL" for Pasila station. The "--t" means what kind of display you want to inititate e.g "main" for the station main display or "1" for platform 1 display.
+##### Running with Tkinter GUI:
+Main display:
+```sh
+python3 main_display.py --s <station-short-code>
+```
+Platform display:
+```sh
+python3 main_display.py --s <station-short-code> --p <platform-number>
+```
+>  The parameter "--s" means the station short code e.g "PSL" for Pasila station. The "--p" means the platform number e.g "1"

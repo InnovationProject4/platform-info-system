@@ -1,28 +1,15 @@
 from tkinter import *
 import threading
-import display_types as types
-import mqtt_connection as mqtt
 import gui_helper
-import argparse
 import table_printer as tp
 from datetime import datetime
-
-parser = argparse.ArgumentParser(description='sets the correct display')
-parser.add_argument('--s', type=str, help='enter station short code')
-parser.add_argument('--t', type=str, help='enter platform number or "main" for main display')
-args = parser.parse_args()
-
-args_station = args.s
-args_display_type = args.t
-if args_display_type == 'main':
-    display = types.StationMainDisplay(args_station)
-else:
-    display = types.PlatformDisplay(args_station, args_display_type)
 
 
 class App(threading.Thread):
 
-    def __init__(self):
+    def __init__(self, column_labels, rowcount):
+        self.column_labels = column_labels
+        self.rowcount = rowcount
         threading.Thread.__init__(self)
         self.root = None
         self.start()
@@ -59,9 +46,9 @@ class App(threading.Thread):
         warning_label = Label(warning_frame, text="", fg='red', bg='#0a4a70', font=('Calibri Light', 15))
         warning_label.place(relx=0.5, rely=0.5, anchor=CENTER)
 
-        gui_helper.configureGrid(display.getType(), main_frame, Grid)
+        gui_helper.configureGrid(main_frame, Grid, self.rowcount, self.column_labels)
 
-        labels = gui_helper.fillGrid(display.getType(), main_frame)
+        labels = gui_helper.fillGrid(main_frame, self.rowcount, self.column_labels)
 
         def update():
             data = tp.formatted
@@ -115,11 +102,6 @@ class App(threading.Thread):
         warning_frame.grid(row=1, column=0, sticky="NSEW")
         main_frame.grid(row=1, column=0, sticky="NSEW")
         main_frame.tkraise()
+
         update()
-
         self.root.mainloop()
-
-
-app = App()
-
-mqtt.createConnection(display.getTopic(args_station), display)

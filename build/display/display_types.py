@@ -12,10 +12,6 @@ class Display(ABC):
     def getTopic(self, station):
         pass
 
-    @abstractmethod
-    def getType(self):
-        pass
-
     def printWarning(self, msg):
         printer.printWarningOnDisplay(msg)
         pass
@@ -41,9 +37,6 @@ class StationMainDisplay(Display):
     def getTopic(self, station):
         return f"station/{station}/main"
 
-    def getType(self):
-        return 'MAIN'
-
 
 # Provides information about the next 10 trains arriving to the platform (departing time, possible delay, train number, destination)
 class PlatformDisplay(Display):
@@ -61,6 +54,3 @@ class PlatformDisplay(Display):
 
     def getTopic(self, station):
         return f"station/{station}/{self.platform_number}"
-
-    def getType(self):
-        return 'PLATFORM'

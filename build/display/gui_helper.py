@@ -1,8 +1,8 @@
-from tkinter import Label
+from tkinter import Label, Frame
 
 
 def configureGrid(frame, grid, rows, columnlabels):
-    columns = len(columnlabels)-1
+    columns = len(columnlabels) - 1
     rows += 1
     while rows >= 0:
         grid.rowconfigure(frame, rows, weight=1)
@@ -24,9 +24,34 @@ def fillGrid(frame, rows, columnlabels):
             color = '#2788c2'
             if (r % 2) == 0:
                 color = '#36a8eb'
-            l = Label(frame, text="", bg=color, fg='white', font=('Consolas', 15))
+            l = Label(frame, text="", bg=color, fg='white', font=('Calibri Light', 15))
             l.grid(row=r, column=c, sticky="NSEW")
             labels.append(l)
             c += 1
         r += 1
     return labels
+
+
+def configureDualPlatformGrid(frame, grid, fillside):
+    for rows in range(4):
+        grid.rowconfigure(frame, rows, weight=1)
+    grid.columnconfigure(frame, 0, weight=1)
+
+    labels = []
+    color = '#36a8eb'
+    for i in range(4):
+        l = Label(frame, text="", fg="white", bg=color, font=('Calibri Light', 10))
+        labels.append(l)
+
+    fillside(labels)
+    return labels
+
+
+def fillLeftSide(labels):
+    for i, l in enumerate(labels):
+        l.grid(row=i, column=0, sticky="W", padx=(20, 0))
+
+
+def fillRightSide(labels):
+    for i, l in enumerate(labels):
+        l.grid(row=i, column=1, sticky="E", padx=(0, 20))

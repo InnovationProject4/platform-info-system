@@ -26,7 +26,7 @@ def initialize():
         else:
             display = types.PlatformDisplay(args_station, args_display_type)
 
-        mqtt.createConnection(display.getTopic(args_station), display)
+        mqtt.createConnection([(display.getTopic(args_station), 1)], display)
 
 
 def takeInput():
@@ -38,7 +38,7 @@ def takeInput():
         else:
             break
 
-    print("Choose a display type:\n1. Station main display \n2. Platform display")
+    print("Choose a display type:\n1. Station main display \n2. Platform display \n3. Dual platform display")
     while True:
         try:
             display_type = int(input())
@@ -47,16 +47,25 @@ def takeInput():
             continue
         if display_type == 1:
             display = types.StationMainDisplay(station)
+            mqtt.createConnection([(display.getTopic(station), 1)], display)
             break
         elif display_type == 2:
             print("Enter platform number")
             platform = input()
             display = types.PlatformDisplay(station, platform)
+            mqtt.createConnection([(display.getTopic(station), 1)], display)
+            break
+        elif display_type == 3:
+            print("Enter left platform number")
+            platform1 = input()
+            print("Enter right platform number")
+            platform2 = input()
+            display = types.DualPlatformDisplay(station, platform1, platform2)
+            mqtt.createConnection([(display.getTopic(station)[0], 1),
+                                   (display.getTopic(station)[1], 1)], display)
             break
         else:
             print("Invalid input")
-
-    mqtt.createConnection(display.getTopic(station), display)
 
 
 if __name__ == '__main__':

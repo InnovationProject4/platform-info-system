@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import table_printer as printer
 
+
 # Abstact class for different kinds of displays
 class Display(ABC):
 
@@ -54,3 +55,29 @@ class PlatformDisplay(Display):
 
     def getTopic(self, station):
         return f"station/{station}/{self.platform_number}"
+
+
+class DualPlatformDisplay(Display):
+
+    def __init__(self, station, platform_number1, platform_number2):
+        self.platform_number1 = platform_number1
+        self.platform_number2 = platform_number2
+        self.station = station
+
+    def printDisplay(self, msg):
+        #try:
+        printer.printLeftDisplay(msg)
+        #except:
+            #print("Error printing display")
+            #pass
+
+    def printDisplay2(self, msg):
+        #try:
+        printer.printRightDisplay(msg)
+        #except:
+            #print("Error printing display")
+            #pass
+
+    def getTopic(self, station):
+        return [f"station/{station}/{self.platform_number1}",
+                f"station/{station}/{self.platform_number2}"]

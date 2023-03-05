@@ -5,6 +5,7 @@ from datetime import datetime
 import paho.mqtt.client as paho
 import station_names as station_names
 import data_manager as data_manager
+import passing_train
 
 client = paho.Client()
 if client.connect("localhost", 1883, 60) != 0:
@@ -45,6 +46,19 @@ def publish_platform_data(station, track, data):
     }
     client.publish(topic, json.dumps(formatted_data), 0)
 
+
+def publish_passing_train_data(station, track):
+    topic = "station/" + station + "/" + str(track) + "/passing"
+    passing_train_data = passing_train.get_passing_train(station)
+
+    if passing_train_data:
+        formatted_data = {
+            "station": station,
+            "trains": passing_train_data
+        }
+        client.publish(topic, json.dumps(formatted_data), 0)
+
+
 while True:
     for station in list_of_stations:
         station_name = station['station']
@@ -54,6 +68,8 @@ while True:
         for track in station['tracks']:
             t = str(track)
             publish_platform_data(station_name, t, data)
+            publish_passing_train_data(station_name, track)
 
         print("Published data for :", station)
+
     time.sleep(30)

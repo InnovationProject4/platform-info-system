@@ -17,4 +17,4 @@ rowcount = 5
 
 timetable_view.App(column_labels, rowcount)
 
-mqtt.createConnection([(display.getTopic(args_station), 1)], display)
+mqtt.createConnection([(display.getTopic()[0], 1), (display.getTopic()[1], 1)], display)

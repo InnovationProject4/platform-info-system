@@ -26,7 +26,7 @@ def initialize():
         else:
             display = types.PlatformDisplay(args_station, args_display_type)
 
-        mqtt.createConnection([(display.getTopic(args_station), 1)], display)
+        mqtt.createConnection([(display.getTopic(), 1)], display)
 
 
 def takeInput():
@@ -47,13 +47,14 @@ def takeInput():
             continue
         if display_type == 1:
             display = types.StationMainDisplay(station)
-            mqtt.createConnection([(display.getTopic(station), 1)], display)
+            mqtt.createConnection([(display.getTopic(), 1)], display)
             break
         elif display_type == 2:
             print("Enter platform number")
             platform = input()
             display = types.PlatformDisplay(station, platform)
-            mqtt.createConnection([(display.getTopic(station), 1)], display)
+            mqtt.createConnection([(display.getTopic()[0], 1),
+                                   (display.getTopic()[1], 1)], display)
             break
         elif display_type == 3:
             print("Enter left platform number")
@@ -61,8 +62,8 @@ def takeInput():
             print("Enter right platform number")
             platform2 = input()
             display = types.DualPlatformDisplay(station, platform1, platform2)
-            mqtt.createConnection([(display.getTopic(station)[0], 1),
-                                   (display.getTopic(station)[1], 1)], display)
+            mqtt.createConnection([(display.getTopic()[0], 1),
+                                   (display.getTopic()[1], 1)], display)
             break
         else:
             print("Invalid input")

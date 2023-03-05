@@ -140,5 +140,5 @@ class App(threading.Thread):
 
 App()
 
-mqtt.createConnection([(display.getTopic(args_station)[0], 1),
-                       (display.getTopic(args_station)[1], 1)], display)
+mqtt.createConnection([(display.getTopic()[0], 1),
+                       (display.getTopic()[1], 1)], display)

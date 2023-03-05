@@ -10,7 +10,11 @@ class Display(ABC):
         pass
 
     @abstractmethod
-    def getTopic(self, station):
+    def getTopic(self):
+        pass
+
+    @abstractmethod
+    def getType(self):
         pass
 
     def printWarning(self, msg):
@@ -35,8 +39,11 @@ class StationMainDisplay(Display):
             print("Error printing display")
             pass
 
-    def getTopic(self, station):
-        return f"station/{station}/main"
+    def getTopic(self):
+        return f"station/{self.station}/main"
+
+    def getType(self):
+        return "MAIN"
 
 
 # Provides information about the next 10 trains arriving to the platform (departing time, possible delay, train number, destination)
@@ -53,8 +60,19 @@ class PlatformDisplay(Display):
             print("Error printing display")
             pass
 
-    def getTopic(self, station):
-        return f"station/{station}/{self.platform_number}"
+    def printPassingTrain(self, msg):
+        try:
+            printer.printPassingTrainOnDisplay(msg)
+        except:
+            print("Error printing passing train")
+            pass
+
+    def getTopic(self):
+        return [f"station/{self.station}/{self.platform_number}",
+                f"station/{self.station}/{self.platform_number}/passing"]
+
+    def getType(self):
+        return "PLATFORM"
 
 
 class DualPlatformDisplay(Display):
@@ -65,19 +83,22 @@ class DualPlatformDisplay(Display):
         self.station = station
 
     def printDisplay(self, msg):
-        #try:
-        printer.printLeftDisplay(msg)
-        #except:
-            #print("Error printing display")
-            #pass
+        try:
+            printer.printLeftDisplay(msg)
+        except:
+            print("Error printing display")
+            pass
 
     def printDisplay2(self, msg):
-        #try:
-        printer.printRightDisplay(msg)
-        #except:
-            #print("Error printing display")
-            #pass
+        try:
+            printer.printRightDisplay(msg)
+        except:
+            print("Error printing display")
+            pass
 
-    def getTopic(self, station):
-        return [f"station/{station}/{self.platform_number1}",
-                f"station/{station}/{self.platform_number2}"]
+    def getTopic(self):
+        return [f"station/{self.station}/{self.platform_number1}",
+                f"station/{self.station}/{self.platform_number2}"]
+
+    def getType(self):
+        return "DUAL_PLATFORM"

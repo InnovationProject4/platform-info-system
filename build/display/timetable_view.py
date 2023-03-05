@@ -20,7 +20,7 @@ class App(threading.Thread):
     def run(self):
         self.root = Tk()
         self.root.protocol("WM_DELETE_WINDOW", self.callback)
-        self.root['bg'] ='#0a4a70'
+        self.root['bg'] = '#0a4a70'
         self.root.geometry("640x360")
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
@@ -58,7 +58,10 @@ class App(threading.Thread):
                 warning_frame.tkraise()
             else:
                 main_frame.tkraise()
-            notification_label['text'] = tp.notification_message
+            if tp.checkPassingTrain():
+                notification_label['text'] = "Passing train incoming. Stay away from the platform"
+            else:
+                notification_label['text'] = tp.notification_message
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
             train = 0
             info = 0
@@ -84,7 +87,7 @@ class App(threading.Thread):
                 resizeFonts(35, 35, 35, 25, 25)
                 return
             elif w > 600 and h > 400:
-                resizeFonts(25, 25, 25, 15 , 15)
+                resizeFonts(25, 25, 25, 15, 15)
                 return
             elif w > 300 and h > 200:
                 resizeFonts(15, 15, 15, 10, 10)

@@ -1,4 +1,3 @@
-
 # Platform information system
 
 #### ✨Developed at Metropolia's innovation project course for a client at Nokia.✨
@@ -27,7 +26,14 @@ station/<station-short-code>/<platform-number>
 ```
 > **Outputs a JSON string:** 
 > {platform, trains: [train, trainType, trainCategory, commuterID, time, actualTime, notice, platform, destination]}
-
+> 
+Data for non stopping trains at a platform
+```sh
+station/<station-short-code>/<platform-number>/passing
+```
+> **Outputs a JSON string:** 
+> {station, trains: [track, scheduledTime]}
+> 
 Notification alert for individual station
 ```sh
 station/<station-short-code>/notification

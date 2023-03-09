@@ -18,11 +18,11 @@ class Display(ABC):
         pass
 
     def printWarning(self, msg):
-        printer.printWarningOnDisplay(msg)
+        printer.printWarningOnDisplay(msg.payload.decode())
         pass
 
     def printNotification(self, msg):
-        printer.printNotificationOnDisplay(msg)
+        printer.printNotificationOnDisplay(msg.payload.decode())
         pass
 
 
@@ -34,7 +34,7 @@ class StationMainDisplay(Display):
 
     def printDisplay(self, msg):
         try:
-            printer.printMainDisplay(msg)
+            printer.printMainDisplay(msg.payload.decode())
         except:
             print("Error printing display")
             pass
@@ -55,21 +55,20 @@ class PlatformDisplay(Display):
 
     def printDisplay(self, msg):
         try:
-            printer.printPlatformDisplay(msg)
+            printer.printPlatformDisplay(msg.payload.decode())
         except:
             print("Error printing display")
             pass
 
     def printPassingTrain(self, msg):
         try:
-            printer.printPassingTrainOnDisplay(msg)
+            printer.printPassingTrainOnDisplay(msg.payload.decode())
         except:
             print("Error printing passing train")
             pass
 
     def getTopic(self):
-        return [f"station/{self.station}/{self.platform_number}",
-                f"station/{self.station}/{self.platform_number}/passing"]
+        return [f"station/{self.station}/{self.platform_number}"]
 
     def getType(self):
         return "PLATFORM"
@@ -83,15 +82,21 @@ class DualPlatformDisplay(Display):
         self.station = station
 
     def printDisplay(self, msg):
+        if msg.topic == self.getTopic()[0]:
+            self.printLeft(msg)
+        elif msg.topic == self.getTopic()[1]:
+            self.printRight(msg)
+
+    def printRight(self, msg):
         try:
-            printer.printLeftDisplay(msg)
+            printer.printRightDisplay(msg.payload.decode())
         except:
             print("Error printing display")
             pass
 
-    def printDisplay2(self, msg):
+    def printLeft(self, msg):
         try:
-            printer.printRightDisplay(msg)
+            printer.printLeftDisplay(msg.payload.decode())
         except:
             print("Error printing display")
             pass

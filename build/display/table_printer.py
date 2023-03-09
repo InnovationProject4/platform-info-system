@@ -5,8 +5,8 @@ import pytz
 import os
 
 # Variables storing information for GUI
-formatted = []
-formatted2 = []
+train_data = []
+train_data2 = []
 display_name = ''
 warning_message = ''
 notification_message = ''
@@ -63,85 +63,75 @@ def printWarningOnDisplay(msg):
 
 def printPlatformDisplay(msg):
     data = json.loads(msg)
-    global formatted
-    formatted = []
+    global train_data
+    train_data = []
     global display_name
     display_name = data['platform']
 
-    for x in data['trains']:
-        if x['time'] == x['actualTime'] or x['actualTime'] == '':
-            if x['notice'] == '':
-                formatted.append([convertUTCtoEET(x['time']), x['notice'], x['commuterID'], x['destination']])
-            else:
-                formatted.append(
-                    [convertUTCtoEET(x['time']), '~ ' + x['notice'] + 'min', x['commuterID'], x['destination']])
-        else:
-            if x['notice'] == '':
-                formatted.append([convertUTCtoEET(x['actualTime']), x['notice'], x['commuterID'], x['destination']])
-            else:
-                formatted.append(
-                    [convertUTCtoEET(x['actualTime']), '~ ' + x['notice'] + 'min', x['commuterID'], x['destination']])
+    for train in data['trains']:
+        appendToTrainData(train, ['commuterID', 'destination'], train_data)
     os.system('cls' if os.name == 'nt' else 'clear')
     print(f'-----------------{data["platform"]}-------------------')
-    print(tabulate(formatted, headers=["Time", "Notice", "Train", "Destination"]))
+    print(tabulate(train_data, headers=["Time", "Notice", "Train", "Destination"]))
 
 
 def printMainDisplay(msg):
     data = json.loads(msg)
-    global formatted
-    formatted = []
+    global train_data
+    train_data = []
     global display_name
     display_name = data["station"]
 
-    for x in data['trains']:
-        if x['time'] == x['actualTime'] or x['actualTime'] == '':
-            if x['notice'] == '':
-                formatted.append(
-                    [convertUTCtoEET(x['time']), x['notice'], x['platform'], x['commuterID'], x['destination']])
-            else:
-                formatted.append(
-                    [convertUTCtoEET(x['time']), '~ ' + x['notice'] + 'min', x['platform'], x['commuterID'],
-                     x['destination']])
-        else:
-            if x['notice'] == '':
-                formatted.append(
-                    [convertUTCtoEET(x['actualTime']), x['notice'], x['platform'], x['commuterID'], x['destination']])
-            else:
-                formatted.append(
-                    [convertUTCtoEET(x['actualTime']), '~ ' + x['notice'] + 'min', x['platform'], x['commuterID'],
-                     x['destination']])
+    for train in data['trains']:
+        appendToTrainData(train, ['platform', 'commuterID', 'destination'], train_data)
     os.system('cls' if os.name == 'nt' else 'clear')
     print(f'--------------{data["station"]}----------------')
-    print(tabulate(formatted, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
+    print(tabulate(train_data, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
 
 
 def printLeftDisplay(msg):
     data = json.loads(msg)
-    global formatted
-    formatted = []
-    printDualPlatformDisplay(data, formatted)
+    global train_data
+    train_data = []
+    printDualPlatformDisplay(data, train_data)
     print(f'--------------------Left-{data["platform"]}-----------------------')
-    print(tabulate(formatted, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
+    print(tabulate(train_data, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
 
 
 def printRightDisplay(msg):
     data = json.loads(msg)
-    global formatted2
-    formatted2 = []
-    printDualPlatformDisplay(data, formatted2)
+    global train_data2
+    train_data2 = []
+    printDualPlatformDisplay(data, train_data2)
     print(f'--------------------Right-{data["platform"]}-----------------------')
-    print(tabulate(formatted, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
+    print(tabulate(train_data2, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
 
 
 def printDualPlatformDisplay(t_data, t_formatted):
-    x = t_data['trains'][0]
-    if x['time'] == x['actualTime'] or x['actualTime'] == '':
-        if x['notice'] == '':
-            t_formatted.append(
-                [convertUTCtoEET(x['time']), x['notice'], x['platform'], x['commuterID'], x['destination']])
+    train = t_data['trains'][0]
+    appendToTrainData(train, ['platform', 'commuterID', 'destination'], t_formatted)
+
+
+def appendToTrainData(train, variables, formatted):
+    if train['time'] == train['actualTime'] or train['actualTime'] == '':
+        if train['notice'] == '':
+            temp = [convertUTCtoEET(train['time']), train['notice']]
+            for variable in variables:
+                temp.extend([train[variable]])
+            formatted.append(temp)
         else:
-            t_formatted.append(
-                [convertUTCtoEET(x['time']), '~ ' + x['notice'] + 'min', x['platform'], x['commuterID'],
-                 x['destination']])
-
-
+            temp = [convertUTCtoEET(train['time']), '~ ' + train['notice']]
+            for variable in variables:
+                temp.extend([train[variable]])
+            formatted.append(temp)
+    else:
+        if train['notice'] == '':
+            temp = [convertUTCtoEET(train['actualTime']), train['notice']]
+            for variable in variables:
+                temp.extend([train[variable]])
+            formatted.append(temp)
+        else:
+            temp = [convertUTCtoEET(train['actualTime']), '~ ' + train['notice']]
+            for variable in variables:
+                temp.extend([train[variable]])
+            formatted.append(temp)

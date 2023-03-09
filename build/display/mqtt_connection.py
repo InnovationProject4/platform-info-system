@@ -3,35 +3,23 @@ import os
 import uuid
 
 display = None
-MQTT_TOPIC = []
 
 
 # Is called on every new MQTT message
 def onMessage(client, data, msg):
     global display
-    global MQTT_TOPIC
 
-    if msg.topic == "station/" + display.station + "/warning":
-        display.printWarning(msg.payload.decode())
+    if "/warning" in msg.topic:
+        display.printWarning(msg)
 
-    elif msg.topic == "station/" + display.station + "/notification":
-        display.printNotification(msg.payload.decode())
+    elif "/notification" in msg.topic:
+        display.printNotification(msg)
 
-    elif display.getType() == 'MAIN':
-        if msg.topic == "station/" + display.station + "/main":
-            display.printDisplay(msg.payload.decode())
+    elif "/passing" in msg.topic:
+        display.printPassingTrain(msg)
 
-    elif display.getType() == 'DUAL_PLATFORM':  # Only dual platforms have 2 displays
-        if msg.topic == display.getTopic()[0]:
-            display.printDisplay(msg.payload.decode())
-        elif msg.topic == display.getTopic()[1]:
-            display.printDisplay2(msg.payload.decode())
-
-    elif display.getType() == 'PLATFORM':  # Only platform displays alert passing trains
-        if msg.topic == "station/" + display.station + "/" + display.platform_number:
-            display.printDisplay(msg.payload.decode())
-        if msg.topic == "station/" + display.station + "/" + display.platform_number + "/passing":
-            display.printPassingTrain(msg.payload.decode())
+    elif msg.topic in display.getTopic():
+        display.printDisplay(msg)
 
 
 def onConnect(client, userdata, flags, rc):
@@ -54,7 +42,6 @@ def createConnection(topic, new_display):
 
     os.system('cls' if os.name == 'nt' else 'clear')
 
-    global MQTT_TOPIC
     MQTT_TOPIC = [("station/" + display.station + "/warning", 1),
                   ("station/" + display.station + "/notification", 1)]
     MQTT_TOPIC.extend(topic)

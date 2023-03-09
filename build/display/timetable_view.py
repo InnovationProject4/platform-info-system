@@ -51,7 +51,7 @@ class App(threading.Thread):
         labels = gui_helper.fillGrid(main_frame, self.rowcount, self.column_labels)
 
         def update():
-            data = tp.formatted
+            data = tp.train_data
             display_name_label['text'] = tp.display_name
             warning_label['text'] = tp.warning_message
             if tp.warning_message != '':

@@ -33,7 +33,8 @@ __all__ = [
 ]
 
 _default_onSuccess = lambda res, status, data : print("successful fetch: " + str(res.status_code), res.text)
-_default_onFailure = lambda res, status, data : print("failed to fetch: " + str(res.status_code))
+_default_onFailure = lambda res, status, data : print(f"Error: {status}") if status == 400 else print(f"Internal Error: {status}"),
+
 
 
 class Simple:

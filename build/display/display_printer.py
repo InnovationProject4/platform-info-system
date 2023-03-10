@@ -61,7 +61,7 @@ def printWarningOnDisplay(msg):
     print(f"\033[91m{msg} \033[00m")
 
 
-def printPlatformDisplay(msg):
+def printTablePlatformDisplay(msg):
     data = json.loads(msg)
     global train_data
     train_data = []
@@ -75,7 +75,7 @@ def printPlatformDisplay(msg):
     print(tabulate(train_data, headers=["Time", "Notice", "Train", "Destination"]))
 
 
-def printMainDisplay(msg):
+def printTableCentralDisplay(msg):
     data = json.loads(msg)
     global train_data
     train_data = []

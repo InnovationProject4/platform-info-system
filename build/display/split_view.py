@@ -1,22 +1,7 @@
-import argparse
 from tkinter import *
 import threading
-import table_printer as tp
+from display import gui_helper, display_printer
 from datetime import datetime
-import gui_helper
-import display_types as types
-import mqtt_connection as mqtt
-
-parser = argparse.ArgumentParser(description='sets the correct display')
-parser.add_argument('--s', type=str, help='enter station short code')
-parser.add_argument('--left', type=str, help='enter platform number')
-parser.add_argument('--right', type=str, help='enter platform number')
-args = parser.parse_args()
-
-args_station = args.s
-args_platform1 = args.left
-args_platform2 = args.right
-display = types.DualPlatformDisplay(args_station, args_platform1, args_platform2)
 
 
 class App(threading.Thread):
@@ -88,15 +73,15 @@ class App(threading.Thread):
                     label['text'] = ''
 
         def update():
-            data1 = tp.train_data
-            data2 = tp.train_data2
-            display_name_label['text'] = tp.display_name
-            warning_label['text'] = tp.warning_message
-            if tp.warning_message != '':
+            data1 = display_printer.train_data
+            data2 = display_printer.train_data2
+            display_name_label['text'] = display_printer.display_name
+            warning_label['text'] = display_printer.warning_message
+            if display_printer.warning_message != '':
                 warning_frame.tkraise()
             else:
                 main_frame.tkraise()
-            notification_label['text'] = tp.notification_message
+            notification_label['text'] = display_printer.notification_message
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
 
             configureLabels(data1, left_labels)
@@ -137,8 +122,3 @@ class App(threading.Thread):
 
         update()
         self.root.mainloop()
-
-App()
-
-mqtt.createConnection([(display.getTopic()[0], 1),
-                       (display.getTopic()[1], 1)], display)

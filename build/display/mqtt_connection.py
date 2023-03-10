@@ -18,7 +18,7 @@ def onMessage(client, data, msg):
     elif "/passing" in msg.topic:
         display.printPassingTrain(msg)
 
-    elif msg.topic in display.getTopic():
+    else:
         display.printDisplay(msg)
 
 
@@ -36,21 +36,17 @@ client.on_connect = onConnect
 client.publish(f'display/{new_uuid}', new_uuid, 1)
 
 
-def createConnection(topic, new_display):
+def createConnection(topics, new_display):
     global display
     display = new_display
 
     os.system('cls' if os.name == 'nt' else 'clear')
 
-    MQTT_TOPIC = [("station/" + display.station + "/warning", 1),
-                  ("station/" + display.station + "/notification", 1)]
-    MQTT_TOPIC.extend(topic)
-
-    print(f"Current topics: {MQTT_TOPIC}")
+    print(f"Current topics: {topics}")
     print("Display initialized. CTRL + C to exit")
 
     client.connect("localhost", 1883, 60)
-    client.subscribe(MQTT_TOPIC)
+    client.subscribe(topics)
 
     try:
         client.loop_forever()

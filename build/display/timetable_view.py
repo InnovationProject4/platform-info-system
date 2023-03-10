@@ -1,7 +1,6 @@
 from tkinter import *
 import threading
-import gui_helper
-import table_printer as tp
+from display import gui_helper, display_printer
 from datetime import datetime
 
 
@@ -51,17 +50,17 @@ class App(threading.Thread):
         labels = gui_helper.fillGrid(main_frame, self.rowcount, self.column_labels)
 
         def update():
-            data = tp.train_data
-            display_name_label['text'] = tp.display_name
-            warning_label['text'] = tp.warning_message
-            if tp.warning_message != '':
+            data = display_printer.train_data
+            display_name_label['text'] = display_printer.display_name
+            warning_label['text'] = display_printer.warning_message
+            if display_printer.warning_message != '':
                 warning_frame.tkraise()
             else:
                 main_frame.tkraise()
-            if tp.checkPassingTrain():
+            if display_printer.checkPassingTrain():
                 notification_label['text'] = "Passing train incoming. Stay away from the platform"
             else:
-                notification_label['text'] = tp.notification_message
+                notification_label['text'] = display_printer.notification_message
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
             train = 0
             info = 0

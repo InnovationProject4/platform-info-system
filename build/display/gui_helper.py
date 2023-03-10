@@ -17,18 +17,14 @@ def fillGrid(frame, rows, columnlabels):
         Label(frame, text=label, font=('Calibri Light', 16), bg="white").grid(row=0, column=i, sticky="NSEW")
 
     labels = []
-    r = 1
-    while r <= rows:
-        c = 0
-        while c < (len(columnlabels)):
+    for r in range(1, rows+1):
+        for c in range(len(columnlabels)):
             color = '#2788c2'
             if (r % 2) == 0:
                 color = '#36a8eb'
-            l = Label(frame, text="", bg=color, fg='white', font=('Calibri Light', 15))
-            l.grid(row=r, column=c, sticky="NSEW")
-            labels.append(l)
-            c += 1
-        r += 1
+            label = Label(frame, text="", bg=color, fg='white', font=('Calibri Light', 15))
+            label.grid(row=r, column=c, sticky="NSEW")
+            labels.append(label)
     return labels
 
 

@@ -1,11 +1,9 @@
 import argparse
 from tkinter import *
 import threading
-import table_printer as tp
+import display_printer as tp
 from datetime import datetime
-import gui_helper
 import display_types as types
-import mqtt_connection as mqtt
 
 parser = argparse.ArgumentParser(description='sets the correct display')
 parser.add_argument('--s', type=str, help='enter station short code')
@@ -94,8 +92,7 @@ class App(threading.Thread):
                     label['text'] = ''
 
         def update():
-            # data1 = tp.formatted
-            # data2 = tp.formatted2
+            # data = tp.formatted
             display_name_label['text'] = tp.display_name
             warning_label['text'] = tp.warning_message
             if tp.warning_message != '':
@@ -105,8 +102,7 @@ class App(threading.Thread):
             notification_label['text'] = tp.notification_message
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
 
-            # configureLabels(data1, left_labels)
-            # configureLabels(data2, right_labels)
+            # configureLabels(data, labels)
 
             checkResize()
             self.root.after(1000, update)
@@ -144,6 +140,5 @@ class App(threading.Thread):
 
         update()
         self.root.mainloop()
-
 
 App()

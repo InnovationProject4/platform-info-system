@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import table_printer as printer
+import display.display_printer as printer
 
 
 # Abstact class for different kinds of displays
@@ -10,7 +10,7 @@ class Display(ABC):
         pass
 
     @abstractmethod
-    def getTopic(self):
+    def getTopics(self):
         pass
 
     @abstractmethod
@@ -26,28 +26,28 @@ class Display(ABC):
         pass
 
 
-# Provides information about all trains arriving at the station (departing time, possible delay, platform, train number, destination)
-class StationMainDisplay(Display):
+class TableCentralDisplay(Display):
 
     def __init__(self, station):
         self.station = station
 
     def printDisplay(self, msg):
         try:
-            printer.printMainDisplay(msg.payload.decode())
+            printer.printTableCentralDisplay(msg.payload.decode())
         except:
             print("Error printing display")
             pass
 
-    def getTopic(self):
-        return f"station/{self.station}/main"
+    def getTopics(self):
+        return [(f"station/{self.station}/main", 1),
+                (f"station/{self.station}/warning", 1),
+                (f"station/{self.station}/notification", 1)]
 
     def getType(self):
         return "MAIN"
 
 
-# Provides information about the next 10 trains arriving to the platform (departing time, possible delay, train number, destination)
-class PlatformDisplay(Display):
+class TablePlatformDisplay(Display):
 
     def __init__(self, station, platform_number):
         self.platform_number = platform_number
@@ -55,7 +55,7 @@ class PlatformDisplay(Display):
 
     def printDisplay(self, msg):
         try:
-            printer.printPlatformDisplay(msg.payload.decode())
+            printer.printTablePlatformDisplay(msg.payload.decode())
         except:
             print("Error printing display")
             pass
@@ -67,8 +67,11 @@ class PlatformDisplay(Display):
             print("Error printing passing train")
             pass
 
-    def getTopic(self):
-        return [f"station/{self.station}/{self.platform_number}"]
+    def getTopics(self):
+        return [(f"station/{self.station}/{self.platform_number}", 1),
+                (f"station/{self.station}/warning", 1),
+                (f"station/{self.station}/notification", 1),
+                (f"station/{self.station}/{self.platform_number}/passing", 1)]
 
     def getType(self):
         return "PLATFORM"
@@ -82,9 +85,9 @@ class DualPlatformDisplay(Display):
         self.station = station
 
     def printDisplay(self, msg):
-        if msg.topic == self.getTopic()[0]:
+        if msg.topic == f"station/{self.station}/{self.platform_number1}":
             self.printLeft(msg)
-        elif msg.topic == self.getTopic()[1]:
+        elif msg.topic == f"station/{self.station}/{self.platform_number2}":
             self.printRight(msg)
 
     def printRight(self, msg):
@@ -101,9 +104,11 @@ class DualPlatformDisplay(Display):
             print("Error printing display")
             pass
 
-    def getTopic(self):
-        return [f"station/{self.station}/{self.platform_number1}",
-                f"station/{self.station}/{self.platform_number2}"]
+    def getTopics(self):
+        return [(f"station/{self.station}/{self.platform_number1}", 1),
+                (f"station/{self.station}/{self.platform_number2}", 1),
+                (f"station/{self.station}/warning", 1),
+                (f"station/{self.station}/notification", 1)]
 
     def getType(self):
         return "DUAL_PLATFORM"

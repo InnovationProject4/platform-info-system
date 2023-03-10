@@ -3,7 +3,7 @@ import messaging.ratatraffic as rata
 from messaging.telemetry import Connection 
 
 
-conn = Connection("localhost", 1883)
+conn = Connection(localhost, 1883)
 conn.connect()
 
 #devices on awake attempt to handshake with management
@@ -21,7 +21,7 @@ t_filter = ['trainType', 'trainCategory', 'commuterLineID']
 tt_filter = ['type', 'cancelled', 'scheduledTime', 'differenceInMinutes', 'liveEstimateTime', 'commercialTrack', 'cause']
 
 def parse(response):
-    # TODO: parse response for destination and commuter ID
+    # TODO: parse response for destination and commuter
     filtered = {key: response[key] for key in t_filter}
     filtered["timeTableRows"] = [{key: row.get(key, None) for key in tt_filter} for row in response['timeTableRows'] if row['stationShortCode'] == STATION]
     return filtered
@@ -30,12 +30,12 @@ def parse(response):
 def publish(trains):
     for train in trains:
         for shift in train['timeTableRows']:
-            platform_id = shift.get('commercialTrack')
+            platform_id = shift.get('commercialTrack', None)
             transit = shift.get('type')
             transport_type = train.get('trainCategory')
         
-        topic = f'station/{STATION}/{platform_id}/{transit}/{transport_type}'
-        conn.publish(topic, json.dumps(train))
+            topic = f"station/{STATION}/{platform_id}/{transit}/{transport_type}"
+            conn.publish(topic, json.dumps(train))
 
     
 

@@ -13,10 +13,6 @@ class Display(ABC):
     def getTopics(self):
         pass
 
-    @abstractmethod
-    def getType(self):
-        pass
-
     def printWarning(self, msg):
         printer.printWarningOnDisplay(msg.payload.decode())
         pass
@@ -42,9 +38,6 @@ class TableCentralDisplay(Display):
         return [(f"station/{self.station}/main", 1),
                 (f"station/{self.station}/warning", 1),
                 (f"station/{self.station}/notification", 1)]
-
-    def getType(self):
-        return "MAIN"
 
 
 class TablePlatformDisplay(Display):
@@ -72,9 +65,6 @@ class TablePlatformDisplay(Display):
                 (f"station/{self.station}/warning", 1),
                 (f"station/{self.station}/notification", 1),
                 (f"station/{self.station}/{self.platform_number}/passing", 1)]
-
-    def getType(self):
-        return "PLATFORM"
 
 
 class DualPlatformDisplay(Display):
@@ -109,6 +99,3 @@ class DualPlatformDisplay(Display):
                 (f"station/{self.station}/{self.platform_number2}", 1),
                 (f"station/{self.station}/warning", 1),
                 (f"station/{self.station}/notification", 1)]
-
-    def getType(self):
-        return "DUAL_PLATFORM"

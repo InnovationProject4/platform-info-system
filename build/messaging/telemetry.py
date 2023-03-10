@@ -81,7 +81,7 @@ class Connection:
 
         """
         if callable(callback):
-            return self.client.subscribe.callback(callback, topics, qos)
+            self.client.message_callback_add(topics, callback)
 
         return self.client.subscribe(topics, qos)
 
@@ -102,12 +102,16 @@ class Connection:
                     (...) 
                 ])
         '''
+        tuples = []
         for topic, callback in topics:
             if callable(callback):
-                self.client.subscribe.callback(callback, topic, qos)
-            else:
-                print("expected a callable, but received: ", + str(type(callback)))
-        
+                self.client.message_callback_add(topic, callback)
+            else: 
+                print("expected a callable, received: " + str(type(callback)))
+
+            tuples.append((topic, qos))
+
+        self.client.subscribe(tuples, qos)
     
     def unsubscribe(self, topic):
         self.client.unsubscribe(topic)

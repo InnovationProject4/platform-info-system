@@ -13,7 +13,9 @@ def initialize():
     conn = Connection("rata-mqtt.digitraffic.fi", 1883)
     conn.connect()
     conn.set_user_data(json.dumps(message))
-    conn.subscribe("trains-by-station/KKN")
+    conn.subscribe("trains-by-station/KKN", lambda res, user, message:(
+        print("message")
+    ))
     return conn
 
 

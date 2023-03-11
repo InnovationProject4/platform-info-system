@@ -19,6 +19,7 @@ class App(threading.Thread):
         self.root.protocol("WM_DELETE_WINDOW", self.callback)
         self.root['bg'] = '#0a4a70'
         self.root.geometry("640x360")
+        # self.root.attributes('-fullscreen', True)
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
         Grid.rowconfigure(self.root, 1, weight=7)

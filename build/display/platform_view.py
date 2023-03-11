@@ -1,7 +1,7 @@
 import argparse
 from tkinter import *
 import threading
-import display_printer as tp
+from display import gui_helper, display_printer
 from datetime import datetime
 import display_types as types
 
@@ -32,6 +32,7 @@ class App(threading.Thread):
         self.root.protocol("WM_DELETE_WINDOW", self.callback)
         self.root['bg'] = '#0a4a70'
         self.root.geometry("640x360")
+        # self.root.attributes('-fullscreen', True)
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
         Grid.rowconfigure(self.root, 1, weight=7)
@@ -93,13 +94,13 @@ class App(threading.Thread):
 
         def update():
             # data = tp.formatted
-            display_name_label['text'] = tp.display_name
-            warning_label['text'] = tp.warning_message
-            if tp.warning_message != '':
+            display_name_label['text'] = display_printer.display_name
+            warning_label['text'] = display_printer.warning_message
+            if display_printer.warning_message != '':
                 warning_frame.tkraise()
             else:
                 main_frame.tkraise()
-            notification_label['text'] = tp.notification_message
+            notification_label['text'] = display_printer.notification_message
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
 
             # configureLabels(data, labels)

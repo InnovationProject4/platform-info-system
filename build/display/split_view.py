@@ -1,6 +1,6 @@
 from tkinter import *
 import threading
-from display import gui_helper, display_printer
+from display import gui_helper, display_printer as dp
 from datetime import datetime
 
 
@@ -25,71 +25,69 @@ class App(threading.Thread):
         Grid.rowconfigure(self.root, 1, weight=7)
 
         top_frame = Frame(self.root, bg='#0a4a70')
+        main_frame = Frame(self.root, bg='#2788c2')
+        warning_frame = Frame(self.root, bg='#0a4a70')
+
         Grid.columnconfigure(top_frame, 0, weight=1)
         Grid.columnconfigure(top_frame, 1, weight=1)
-
         Grid.rowconfigure(top_frame, 0, weight=1)
-        display_name_label = Label(top_frame, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 25))
-        display_name_label.grid(row=0, column=0, sticky="W", padx=(20, 0))
-
-        time_label = Label(top_frame, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 15))
-        time_label.grid(row=0, column=1, sticky="E", padx=(0, 20))
-
-        main_frame = Frame(self.root, bg='#2788c2')
         Grid.columnconfigure(main_frame, 0, weight=25)
         Grid.columnconfigure(main_frame, 1, weight=1)
         Grid.columnconfigure(main_frame, 2, weight=25)
         Grid.rowconfigure(main_frame, 0, weight=1)
 
+        display_name_label = Label(top_frame, text=dp.reactive_display_name.value, fg='white', bg='#0a4a70', font=('Calibri Light', 25))
+        display_name_label.grid(row=0, column=0, sticky="W", padx=(20, 0))
+        dp.reactive_display_name.watch(lambda: updateLabels(dp.reactive_display_name, display_name_label))
+
+        time_label = Label(top_frame, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 15))
+        time_label.grid(row=0, column=1, sticky="E", padx=(0, 20))
+
+        notification_label = Label(self.root, text=dp.reactive_notification.value, fg='white', bg='#0a4a70', font=('Calibri Light', 15))
+        notification_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
+        dp.reactive_notification.watch(lambda: updateLabels(dp.reactive_notification, notification_label))
+
+        warning_label = Label(warning_frame, text="", fg='red', bg='#0a4a70', font=('Calibri Light', 15))
+        warning_label.place(relx=0.5, rely=0.5, anchor=CENTER)
+        dp.reactive_warning.watch(lambda: updateLabels(dp.reactive_warning, warning_label))
+
         leftframe = Frame(main_frame, bg='#36a8eb')
         leftframe.grid(row=0, column=0, sticky="NSEW")
-
         rightframe = Frame(main_frame, bg='#36a8eb')
         rightframe.grid(row=0, column=2, sticky="NSEW")
 
         left_labels = gui_helper.configureDualPlatformGrid(leftframe, Grid, gui_helper.fillLeftSide)
+        dp.reactive_train_data.watch(lambda: updateTrains(dp.reactive_train_data, left_labels))
         right_labels = gui_helper.configureDualPlatformGrid(rightframe, Grid, gui_helper.fillRightSide)
+        dp.reactive_train_data2.watch(lambda: updateTrains(dp.reactive_train_data2, right_labels))
 
-        notification_label = Label(self.root, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 15))
-        notification_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
+        def updateLabels(reactive, label):
+            label.config(text=reactive.value)
 
-        warning_frame = Frame(self.root, bg='#0a4a70')
-        warning_label = Label(warning_frame, text="", fg='red', bg='#0a4a70', font=('Calibri Light', 15))
-        warning_label.place(relx=0.5, rely=0.5, anchor=CENTER)
-
-        def configureLabels(data, l):
+        def updateTrains(reactive, labels):
             i = 0
-            for label in l:
+            for label in labels:
                 try:
-                    if (i+1) == 1 and data[0][1] != "":
-                        label['text'] = data[0][0] + data[0][1]
+                    if (i+1) == 1 and reactive.value[0][1] != "":
+                        label['text'] = reactive.value[0][0] + reactive.value[0][1]
                         i += 1
                     elif i == 0:
-                        label['text'] = data[0][i]
+                        label['text'] = reactive.value[0][i]
                         i += 1
                     else:
-                        label['text'] = data[0][i]
+                        label['text'] = reactive.value[0][i]
                     i += 1
                 except IndexError:
                     label['text'] = ''
 
-        def update():
-            data1 = display_printer.train_data
-            data2 = display_printer.train_data2
-            display_name_label['text'] = display_printer.display_name
-            warning_label['text'] = display_printer.warning_message
-            if display_printer.warning_message != '':
+        def updateScreen():
+            if dp.reactive_warning.value != '':
                 warning_frame.tkraise()
             else:
                 main_frame.tkraise()
-            notification_label['text'] = display_printer.notification_message
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
-
-            configureLabels(data1, left_labels)
-            configureLabels(data2, right_labels)
-
             checkResize()
-            self.root.after(1000, update)
+            self.root.after(1000, updateScreen)
 
         def checkResize():
             w = self.root.winfo_width()
@@ -121,5 +119,5 @@ class App(threading.Thread):
         main_frame.grid(row=1, column=0, sticky="NSEW")
         main_frame.tkraise()
 
-        update()
+        updateScreen()
         self.root.mainloop()

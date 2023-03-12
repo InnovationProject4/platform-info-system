@@ -28,7 +28,7 @@ def fillGrid(frame, rows, columnlabels):
     return labels
 
 
-def configureDualPlatformGrid(frame, grid, fillside):
+def configureDualPlatformGrid(frame, grid, callback):
     for rows in range(4):
         grid.rowconfigure(frame, rows, weight=1)
     grid.columnconfigure(frame, 0, weight=1)
@@ -39,7 +39,7 @@ def configureDualPlatformGrid(frame, grid, fillside):
         l = Label(frame, text="", fg="white", bg=color, font=('Calibri Light', 10))
         labels.append(l)
 
-    fillside(labels)
+    callback(labels)
     return labels
 
 

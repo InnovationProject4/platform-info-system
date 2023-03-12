@@ -15,22 +15,22 @@ def main():
     parser.add_argument('-right', type=str, help='enter right display platform number')
     args = parser.parse_args()
 
-    if str(args.view) == "splitview" and (args.s or args.left or args.right) is not None:
+    if args.view == "splitview" and None not in [args.s, args.left, args.right]:
         display = types.DualPlatformDisplay(args.s, args.left, args.right)
         split_view.App()
-        mqtt.createConnection(display.getTopics(), display)
+        mqtt.createConnection(display)
 
     elif args.view == "tableview" and args.s is not None and args.p is None:
         display = types.TableCentralDisplay(args.s)
         # Setting column names and table row count
         timetable_view.App(["Time", "Notice", "Platform", "Train", "Destination"], 10)
-        mqtt.createConnection(display.getTopics(), display)
+        mqtt.createConnection(display)
 
-    elif args.view == "tableview" and args.s is not None and args is not None:
+    elif args.view == "tableview" and None not in [args.s, args.p]:
         display = types.TablePlatformDisplay(args.s, args.p)
         # Setting column names and table row count
         timetable_view.App(["Time", "Notice", "Train", "Destination"], 5)
-        mqtt.createConnection(display.getTopics(), display)
+        mqtt.createConnection(display)
 
     else:
         print("Invalid arguments")

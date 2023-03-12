@@ -1,15 +1,16 @@
 from tabulate import tabulate
 from datetime import datetime
+from utils.Event import Reactive
 import json
 import pytz
 import os
 
 # Variables storing information for GUI
-train_data = []
-train_data2 = []
-display_name = ''
-warning_message = ''
-notification_message = ''
+reactive_train_data = Reactive([])
+reactive_train_data2 = Reactive([])
+reactive_display_name = Reactive('')
+reactive_warning = Reactive('')
+reactive_notification = Reactive('')
 passing_train_time = ''
 
 
@@ -48,68 +49,72 @@ def printPassingTrainOnDisplay(msg):
 
 
 def printNotificationOnDisplay(msg):
-    global notification_message
-    notification_message = msg
+    global reactive_notification
+    reactive_notification.value = msg
     # Color blue with ANSI code
     print(f"\033[34m{msg} \033[00m")
 
 
 def printWarningOnDisplay(msg):
-    global warning_message
-    warning_message = msg
+    global reactive_warning
+    reactive_warning.value = msg
     # Color red with ANSI code
     print(f"\033[91m{msg} \033[00m")
 
 
 def printTablePlatformDisplay(msg):
     data = json.loads(msg)
-    global train_data
-    train_data = []
-    global display_name
-    display_name = data['platform']
+    global reactive_train_data
+    global reactive_display_name
+    reactive_display_name.value = data['platform']
+    temp_train_data = []
 
     for train in data['trains']:
-        appendToTrainData(train, ['commuterID', 'destination'], train_data)
+        appendToTrainData(train, ['commuterID', 'destination'], temp_train_data)
+    # using temp array so Reactive._notify doesnt trigger on every append
+    reactive_train_data.value = temp_train_data
     os.system('cls' if os.name == 'nt' else 'clear')
     print(f'-----------------{data["platform"]}-------------------')
-    print(tabulate(train_data, headers=["Time", "Notice", "Train", "Destination"]))
+    print(tabulate(reactive_train_data.value, headers=["Time", "Notice", "Train", "Destination"]))
 
 
 def printTableCentralDisplay(msg):
     data = json.loads(msg)
-    global train_data
-    train_data = []
-    global display_name
-    display_name = data["station"]
+    global reactive_train_data
+    global reactive_display_name
+    reactive_display_name.value = data["station"]
+    temp_train_data = []
 
     for train in data['trains']:
-        appendToTrainData(train, ['platform', 'commuterID', 'destination'], train_data)
+        appendToTrainData(train, ['platform', 'commuterID', 'destination'], temp_train_data)
+    # using temp array so Reactive._notify doesnt trigger on every append
+    reactive_train_data.value = temp_train_data
     os.system('cls' if os.name == 'nt' else 'clear')
     print(f'--------------{data["station"]}----------------')
-    print(tabulate(train_data, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
+    print(tabulate(reactive_train_data.value, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
 
 
 def printLeftDisplay(msg):
     data = json.loads(msg)
-    global train_data
-    train_data = []
-    printDualPlatformDisplay(data, train_data)
+    global reactive_train_data
+    reactive_train_data.value = printDualPlatformDisplay(data)
     print(f'--------------------Left-{data["platform"]}-----------------------')
-    print(tabulate(train_data, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
+    print(tabulate(reactive_train_data.value, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
 
 
 def printRightDisplay(msg):
     data = json.loads(msg)
-    global train_data2
-    train_data2 = []
-    printDualPlatformDisplay(data, train_data2)
+    global reactive_train_data2
+    reactive_train_data2.value = printDualPlatformDisplay(data)
     print(f'--------------------Right-{data["platform"]}-----------------------')
-    print(tabulate(train_data2, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
+    print(tabulate(reactive_train_data2.value, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
 
 
-def printDualPlatformDisplay(t_data, t_formatted):
+def printDualPlatformDisplay(t_data):
     train = t_data['trains'][0]
-    appendToTrainData(train, ['platform', 'commuterID', 'destination'], t_formatted)
+    temp = []
+    appendToTrainData(train, ['platform', 'commuterID', 'destination'], temp)
+    return temp
 
 
 def appendToTrainData(train, variables, formatted):

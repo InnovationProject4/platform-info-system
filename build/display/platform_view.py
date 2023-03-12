@@ -1,20 +1,7 @@
-import argparse
 from tkinter import *
 import threading
-from display import gui_helper, display_printer
+from display import gui_helper, display_printer as dp
 from datetime import datetime
-import display_types as types
-
-parser = argparse.ArgumentParser(description='sets the correct display')
-parser.add_argument('--s', type=str, help='enter station short code')
-parser.add_argument('--left', type=str, help='enter platform number')
-parser.add_argument('--right', type=str, help='enter platform number')
-args = parser.parse_args()
-
-args_station = args.s
-args_platform1 = args.left
-args_platform2 = args.right
-display = types.DualPlatformDisplay(args_station, args_platform1, args_platform2)
 
 
 class App(threading.Thread):
@@ -38,75 +25,69 @@ class App(threading.Thread):
         Grid.rowconfigure(self.root, 1, weight=7)
 
         top_frame = Frame(self.root, bg='#031626')
+        main_frame = Frame(self.root, bg='#061f36')
+        warning_frame = Frame(self.root, bg='#0a4a70')
+
         Grid.columnconfigure(top_frame, 0, weight=1)
         Grid.columnconfigure(top_frame, 1, weight=1)
-
         Grid.rowconfigure(top_frame, 0, weight=1)
+
         display_name_label = Label(top_frame, text="", fg='white', bg='#031626', font=('Calibri Light', 25))
         display_name_label.grid(row=0, column=0, sticky="W", padx=(20, 0))
+        dp.reactive_display_name.watch(lambda: updateLabels(dp.reactive_display_name.value, display_name_label))
 
         time_label = Label(top_frame, text="", fg='white', bg='#031626', font=('Calibri Light', 15))
         time_label.grid(row=0, column=1, sticky="E", padx=(0, 20))
 
-        main_frame = Frame(self.root, bg='#061f36')
         Grid.columnconfigure(main_frame, 0, weight=2)
         Grid.columnconfigure(main_frame, 1, weight=1)
         Grid.columnconfigure(main_frame, 2, weight=2)
 
-        arrive_label = Label(main_frame, text="1 Min", fg='white', anchor='e', justify=RIGHT, bg='#061f36',
-                             font=('Calibri Light', 15))
+        arrive_label = Label(main_frame, text="", fg='white', anchor='e', justify=RIGHT, bg='#061f36', font=('Calibri Light', 15))
         arrive_label.grid(row=0, column=0, sticky="SEW")
+        dp.reactive_train_data.watch(lambda: updateLabels(dp.reactive_train_data.value[0][0], arrive_label))
 
-        destination_label = Label(main_frame, text="Leppävaara", anchor='e', justify=RIGHT, fg='white', bg='#061f36',
-                                  font=('Calibri Light', 30))
+        destination_label = Label(main_frame, text="", anchor='e', justify=RIGHT, fg='white', bg='#061f36', font=('Calibri Light', 30))
         destination_label.grid(row=1, column=0, sticky="NSEW")
+        dp.reactive_train_data.watch(lambda: updateLabels(dp.reactive_train_data.value[0][3], destination_label))
 
-        platform_label = Label(main_frame, text="4", anchor='e', justify=RIGHT, fg='white', bg='#061f36',
-                               font=('Calibri Light', 35))
-        platform_label.grid(row=0, column=2, sticky="NSEW", padx=(0, 100))
+        train_label = Label(main_frame, text="", anchor='e', justify=RIGHT, fg='white', bg='#061f36', font=('Calibri Light', 35))
+        train_label.grid(row=0, column=2, sticky="NSEW", padx=(0, 100))
+        dp.reactive_train_data.watch(lambda: updateLabels(dp.reactive_train_data.value[0][2], train_label))
 
-        stops_label = Label(main_frame, text="Alberga\nGöckerbacka\nMatinkylä\nHuopalahti", fg='white', bg='#061f36',
-                            anchor='w', justify=LEFT, font=('Calibri Light', 15))
+        # TODO stop label
+        stops_label = Label(main_frame, text="Test\nTest\nTest\nTest", fg='white', bg='#061f36', anchor='w', justify=LEFT, font=('Calibri Light', 15))
         stops_label.grid(row=1, column=2, rowspan=9, sticky="NSEW")
 
-        notification_label = Label(self.root, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 15))
-        notification_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
+        # TODO train label
 
-        warning_frame = Frame(self.root, bg='#0a4a70')
+        notification_label = Label(self.root, text=dp.reactive_notification.value, fg='white', bg='#0a4a70', font=('Calibri Light', 15))
+        notification_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
+        dp.reactive_notification.watch(lambda: updateNotification(notification_label))
+        dp.reactive_passing.watch(lambda: updateNotification(notification_label))
+
         warning_label = Label(warning_frame, text="", fg='red', bg='#0a4a70', font=('Calibri Light', 15))
         warning_label.place(relx=0.5, rely=0.5, anchor=CENTER)
+        dp.reactive_warning.watch(lambda: updateLabels(dp.reactive_warning.value, warning_label))
 
-        def configureLabels(data, l):
-            i = 0
-            for label in l:
-                try:
-                    if (i + 1) == 1 and data[0][1] != "":
-                        label['text'] = data[0][0] + data[0][1]
-                        i += 1
-                    elif i == 0:
-                        label['text'] = data[0][i]
-                        i += 1
-                    else:
-                        label['text'] = data[0][i]
-                    i += 1
-                except IndexError:
-                    label['text'] = ''
+        def updateNotification(label):
+            if dp.reactive_passing.value:
+                label.config(text="Passing train incoming. Stay away from the platform")
+            else:
+                label.config(text=dp.reactive_notification.value)
 
-        def update():
-            # data = tp.formatted
-            display_name_label['text'] = display_printer.display_name
-            warning_label['text'] = display_printer.warning_message
-            if display_printer.warning_message != '':
+        def updateLabels(reactive, label):
+            label.config(text=reactive)
+
+        def updateScreen():
+            if dp.reactive_warning.value != '':
                 warning_frame.tkraise()
             else:
                 main_frame.tkraise()
-            notification_label['text'] = display_printer.notification_message
+            dp.checkPassingTrain()
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
-
-            # configureLabels(data, labels)
-
             checkResize()
-            self.root.after(1000, update)
+            self.root.after(1000, updateScreen)
 
         def checkResize():
             w = self.root.winfo_width()
@@ -131,7 +112,7 @@ class App(threading.Thread):
             time_label['font'] = ('Calibri Light', s_time)
             arrive_label['font'] = ('Calibri Light', s_arrive)
             destination_label['font'] = ('Calibri Light', s_platform)
-            platform_label['font'] = ('Calibri Light', s_platform)
+            train_label['font'] = ('Calibri Light', s_platform)
             stops_label['font'] = ('Calibri Light', s_stops)
 
         top_frame.grid(row=0, column=0, sticky="NSEW")
@@ -139,7 +120,5 @@ class App(threading.Thread):
         main_frame.grid(row=1, column=0, sticky="NSEW")
         main_frame.tkraise()
 
-        update()
+        updateScreen()
         self.root.mainloop()
-
-App()

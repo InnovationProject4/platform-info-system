@@ -43,7 +43,8 @@ class App(threading.Thread):
 
         notification_label = Label(self.root, text=dp.reactive_notification.value, fg='white', bg='#0a4a70', font=('Calibri Light', 15))
         notification_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
-        dp.reactive_notification.watch(lambda: updateLabels(dp.reactive_notification, notification_label))
+        dp.reactive_notification.watch(lambda: updateNotification(notification_label))
+        dp.reactive_passing.watch(lambda: updateNotification(notification_label))
 
         warning_label = Label(warning_frame, text="", fg='red', bg='#0a4a70', font=('Calibri Light', 15))
         warning_label.place(relx=0.5, rely=0.5, anchor=CENTER)
@@ -52,6 +53,12 @@ class App(threading.Thread):
         gui_helper.configureGrid(main_frame, Grid, self.rowcount, self.column_labels)
         labels = gui_helper.fillGrid(main_frame, self.rowcount, self.column_labels)
         dp.reactive_train_data.watch(lambda: updateTrains(dp.reactive_train_data, labels))
+
+        def updateNotification(label):
+            if dp.reactive_passing.value:
+                label.config(text="Passing train incoming. Stay away from the platform")
+            else:
+                label.config(text=dp.reactive_notification.value)
 
         def updateLabels(reactive, label):
             label.config(text=reactive.value)
@@ -73,10 +80,7 @@ class App(threading.Thread):
                 warning_frame.tkraise()
             else:
                 main_frame.tkraise()
-            if dp.checkPassingTrain():
-                notification_label['text'] = "Passing train incoming. Stay away from the platform"
-            else:
-                notification_label['text'] = dp.reactive_notification.value
+            dp.checkPassingTrain()
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
             checkResize()
             self.root.after(1000, updateScreen)

@@ -11,6 +11,7 @@ reactive_train_data2 = Reactive([])
 reactive_display_name = Reactive('')
 reactive_warning = Reactive('')
 reactive_notification = Reactive('')
+reactive_passing = Reactive(False)
 passing_train_time = ''
 
 
@@ -23,7 +24,7 @@ def convertUTCtoEET(time):
 
 def checkPassingTrain():
     try:
-        global passing_train_time
+        global passing_train_time, reactive_passing
         time_now = datetime.now(pytz.timezone("Europe/Helsinki"))
         date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
         dt_utc = pytz.timezone("UTC").localize(datetime.strptime(passing_train_time, date_format))
@@ -33,9 +34,9 @@ def checkPassingTrain():
         # checks if passing train is one minute away from the station
         if dt_helsinki > time_now and dt_helsinki.date() == time_now.date() and (difference.seconds / 60) <= 1:
             print("Passing train incoming. Stay away from the platform")
-            return True
+            reactive_passing.value = True
         else:
-            return False
+            reactive_passing.value = False
     except ValueError:
         pass
 

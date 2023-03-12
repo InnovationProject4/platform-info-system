@@ -61,27 +61,17 @@ Clone the repository with git
 ```sh
 git clone https://github.com/InnovationProject4/platform-info-system
 ```
-You will need to install these following modules for running displays:
-```sh
-pip3 install paho-mqtt tabulate pytz
-```
-Navigate to the folder "build\display" and choose to run on console or with GUI
+Then navigate to the "build" folder.
 
-### Running in console (not recommended) :
+You will need to install the requirements.txt file for running displays:
 ```sh
-python3 main.py
+pip3 install -r requirements.txt
 ```
-### Running with Tkinter GUI:
-Main display:
+The display can be executed with the command:
 ```sh
-python3 main_display.py --s <station-short-code>
+python3 client.py -view <display_view> -s <station_short_code> -p <platform> -left <platform> -right <platform>
 ```
-Platform display:
-```sh
-python3 platform_display.py --s <station-short-code> --p <platform-number>
-```
-Dual platform display:
-```sh
-python3 dual_platform_display.py --s <station-short-code> --left <platform-number> --right <platform-number>
-```
->  The parameter "--s" means the station short code e.g "PSL" for Pasila station. The "--p" means the platform number e.g "1"
+> Here is an explanation of the different parameters:\
+> -type "tableview" requires the parameter -s but -p is optional\
+> -type "splitview" requires parameters -s, -left, -right\
+> -type "platformview" requires parameters -s and -p

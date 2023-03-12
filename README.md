@@ -72,6 +72,6 @@ The display can be executed with the command:
 python3 client.py -view <display_view> -s <station_short_code> -p <platform> -left <platform> -right <platform>
 ```
 > Here is an explanation of the different parameters:\
-> -type "tableview" requires the parameter -s but -p is optional\
-> -type "splitview" requires parameters -s, -left, -right\
-> -type "platformview" requires parameters -s and -p
+> -view "tableview" requires the parameter -s but -p is optional\
+> -view "splitview" requires parameters -s, -left, -right\
+> -view "platformview" requires parameters -s and -p

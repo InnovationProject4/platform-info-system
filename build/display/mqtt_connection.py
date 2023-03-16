@@ -1,25 +1,24 @@
+import uuid
+
 from messaging.telemetry import Connection
 
 display = None
-
-# # UUID used for random client id
-# new_uuid = str(uuid.uuid4())
-# client = paho.Client(client_id=new_uuid)
-# client.on_message = onMessage
-# client.on_connect = onConnect
-#
-# client.publish(f'display/{new_uuid}', new_uuid, 1)
+conn = Connection("localhost", 1883)
+new_uuid = str(uuid.uuid4())
 
 
 def createConnection(new_display):
     global display
     display = new_display
-
-    conn = Connection("localhost", 1883)
+    # Last will message if connection disconnects without disconnect()
+    conn.set_last_will(f"management/{new_uuid}", f"Disconnected: {new_uuid}", 0)
     conn.connect()
 
+    conn.publish(f"management/{new_uuid}", f"Connected: {new_uuid}")
+    conn.subscribe_multiple(display.handleSubscriptions())
 
-    try:
-        conn.subscribe_multiple(display.handleSubscriptions())
-    except KeyboardInterrupt:
-        conn.disconnect()
+
+# Is called when the Tkinter root window is closed
+def onDisconnect():
+    conn.publish(f"management/{new_uuid}", f"Disconnected: {new_uuid}")
+    conn.disconnect()  # Here last will message is not published

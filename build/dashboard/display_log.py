@@ -1,4 +1,5 @@
 import tkinter as tk
+from dashboard import controller
 
 
 def createDisplayLog(root, right_frame):
@@ -10,3 +11,4 @@ def createDisplayLog(root, right_frame):
     scrollbar.grid(row=0, column=1, sticky='NSEW')
     status_log.config(yscrollcommand=scrollbar.set)
     status_log.bind('<Configure>', lambda e: status_log.configure(width=round(root.winfo_width() / 40)))
+    controller.connectToDisplays(status_log)

@@ -1,6 +1,6 @@
 from tkinter import *
 import threading
-from display import gui_helper, display_printer as dp
+from display import gui_helper, display_printer as dp, mqtt_connection as mqtt
 from datetime import datetime
 
 
@@ -16,9 +16,13 @@ class App(threading.Thread):
     def callback(self):
         self.root.quit()
 
+    def onClose(self):
+        mqtt.disconnectOnWindowClose()
+        self.callback()
+
     def run(self):
         self.root = Tk()
-        self.root.protocol("WM_DELETE_WINDOW", self.callback)
+        self.root.protocol("WM_DELETE_WINDOW", self.onClose)
         self.root['bg'] = '#0a4a70'
         self.root.geometry("640x360")
         # self.root.attributes('-fullscreen', True)

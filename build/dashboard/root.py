@@ -1,5 +1,5 @@
 import tkinter as tk
-from management_gui import display_log, server_log, announcement_manager, infodisplay_manager
+from dashboard import display_log, aggregator_log, announcement_manager, infodisplay_manager
 
 
 def createRoot():
@@ -16,8 +16,8 @@ def createRoot():
 
     # Adding labels to top of the root
     tk.Label(root, text="Announcement manager", font=('Calibri Light', 15)).grid(row=0, column=0, sticky='NSEW')
-    tk.Label(root, text="Server log", font=('Calibri Light', 15)).grid(row=0, column=1, sticky='NSEW')
-    tk.Label(root, text="Status log", font=('Calibri Light', 15)).grid(row=0, column=2, sticky='NSEW')
+    tk.Label(root, text="Aggregator log", font=('Calibri Light', 15)).grid(row=0, column=1, sticky='NSEW')
+    tk.Label(root, text="Display status log", font=('Calibri Light', 15)).grid(row=0, column=2, sticky='NSEW')
 
     # Creates and adds 3 frames inside the root frame
     left_frame = tk.Frame(root, bg='#b8b8b8')
@@ -39,9 +39,9 @@ def createRoot():
 
     display_log.createDisplayLog(root, right_frame)
 
-    server_log.createServerLog(root, middle_frame)
+    aggregator_log.createAggregatorLog(root, middle_frame)
 
-    announcement_manager.createAnnouncementManager(left_frame)
+    announcement_manager.createAnnouncementManager(left_frame, root)
 
     infodisplay_manager.createInfodisplayManager(left_frame, root)
 

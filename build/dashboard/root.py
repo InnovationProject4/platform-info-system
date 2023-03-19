@@ -1,11 +1,24 @@
 import tkinter as tk
-from dashboard import display_log, aggregator_log, announcement_manager, infodisplay_manager
+from dashboard import log, announcement_manager, infodisplay_manager, controller
 
 
 def createRoot():
+
+    def onClose(root):
+        controller.terminate(root)
+
     root = tk.Tk()
     root.geometry("1280x720")
     root.title("")
+    root.protocol("WM_DELETE_WINDOW", lambda: onClose(root))
+
+    # create menu
+    menu_bar = tk.Menu(root)
+    root.config(menu=menu_bar)
+    options_menu = tk.Menu(menu_bar, tearoff=0)
+    menu_bar.add_cascade(label="Options", menu=options_menu)
+    options_menu.add_command(label="Show all announcements", command=controller.dbGetAll)
+    options_menu.add_command(label="Clear all announcements", command=controller.dbClear)
 
     # Configures the amount of columns and rows for root
     tk.Grid.columnconfigure(root, 0, weight=1)
@@ -37,9 +50,11 @@ def createRoot():
     tk.Grid.rowconfigure(left_frame, 1, weight=1)
     tk.Grid.rowconfigure(left_frame, 2, weight=70)
 
-    display_log.createDisplayLog(root, right_frame)
+    # creates the Aggregator log
+    log.createLog(root, middle_frame, controller.connectToAggregator)
 
-    aggregator_log.createAggregatorLog(root, middle_frame)
+    # creates the Display status log
+    log.createLog(root, right_frame, controller.connectToDisplays)
 
     announcement_manager.createAnnouncementManager(left_frame, root)
 

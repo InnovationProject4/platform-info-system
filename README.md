@@ -45,7 +45,7 @@ station/<station-short-code>/warning
 
 ## Installation
 
-For running the build locally on Linux
+For running the build on Linux
 
 Install Eclipse Mosquitto
 ```sh
@@ -54,24 +54,42 @@ sudo apt-get update
 sudo apt-get install mosquitto
 sudo apt-get install mosquitto-clients
 ```
-
-### Displays
+Start the broker
+```sh
+mosquitto
+```
 
 Clone the repository with git
 ```sh
 git clone https://github.com/InnovationProject4/platform-info-system
 ```
-Then navigate to the "build" folder.
+Navigate to the "build" folder.
 
-You will need to install the requirements.txt file for running displays:
+You will need to install the requirements.txt files:
 ```sh
 pip3 install -r requirements.txt
 ```
+
+Edit the config.ini file if you are not running the build locally
+```sh
+[mqtt-broker]
+ip = localhost
+port = 1883
+```
+### Displays
+
 The display can be executed with the command:
 ```sh
-python3 client.py -view <display_view> -s <station_short_code> -p <platform> -left <platform> -right <platform>
+python3 display_client.py -view <display_view> -s <station_short_code> -p <platform> -left <platform> -right <platform>
 ```
 > Here is an explanation of the different parameters:\
 > -view "tableview" requires the parameter -s but -p is optional\
 > -view "splitview" requires parameters -s, -left, -right\
 > -view "platformview" requires parameters -s and -p
+> 
+### Manager
+
+The manager can be executed with the command:
+```sh
+python3 manager_client.py
+```

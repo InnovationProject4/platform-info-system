@@ -17,7 +17,7 @@ class App(threading.Thread):
         self.root.quit()
 
     def onClose(self):
-        mqtt.disconnectOnWindowClose()
+        mqtt.onDisconnect()
         self.callback()
 
     def run(self):

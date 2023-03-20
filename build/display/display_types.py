@@ -23,9 +23,9 @@ class TableCentralDisplay(Display):
             (f"station/{self.station}/warning", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())
             )),
-            (f"station/{self.station}/notification", lambda client, userdata, message: (
-                printer.printNotificationOnDisplay(message.payload.decode())
-            ))
+            (f"announcement/alert/{self.station}", lambda client, userdata, message: (
+                printer.printAnnouncementsOnDisplay(message.payload.decode())
+            )),
         ]
 
 
@@ -43,12 +43,12 @@ class TablePlatformDisplay(Display):
             (f"station/{self.station}/warning", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())
             )),
-            (f"station/{self.station}/notification", lambda client, userdata, message: (
-                printer.printNotificationOnDisplay(message.payload.decode())
+            (f"announcement/+/{self.station}/{self.platform_number}", lambda client, userdata, message: (
+                printer.printAnnouncementsOnDisplay(message.payload.decode())
             )),
             (f"station/{self.station}/{self.platform_number}/passing", lambda client, userdata, message: (
                 printer.printPassingTrainOnDisplay(message.payload.decode())
-            ))
+            )),
         ]
 
 
@@ -69,8 +69,5 @@ class DualPlatformDisplay(Display):
             )),
             (f"station/{self.station}/warning", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())
-            )),
-            (f"station/{self.station}/notification", lambda client, userdata, message: (
-                printer.printNotificationOnDisplay(message.payload.decode())
             ))
         ]

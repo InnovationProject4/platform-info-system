@@ -17,8 +17,9 @@ def createRoot():
     root.config(menu=menu_bar)
     options_menu = tk.Menu(menu_bar, tearoff=0)
     menu_bar.add_cascade(label="Options", menu=options_menu)
-    options_menu.add_command(label="Show all announcements", command=controller.dbGetAll)
-    options_menu.add_command(label="Clear all announcements", command=controller.dbClear)
+    options_menu.add_command(label="Show all", command=controller.dbGetAll)
+    options_menu.add_command(label="Clear announcements", command=controller.dbClearAnnouncements)
+    options_menu.add_command(label="Clear database", command=controller.dbClear)
 
     # Configures the amount of columns and rows for root
     tk.Grid.columnconfigure(root, 0, weight=1)

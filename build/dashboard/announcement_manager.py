@@ -32,7 +32,7 @@ def createAnnouncementManager(left_frame, root):
     station_entry = tk.Entry(announcement_frame, width=5)
     station_entry.grid(row=0, column=3, sticky='EW')
 
-    tk.Label(announcement_frame, text="Platfrom id", bg="#d8d8d8").grid(row=0, column=4, sticky='NSEW', padx=(10, 10))
+    tk.Label(announcement_frame, text="Platfrom id*", bg="#d8d8d8").grid(row=0, column=4, sticky='NSEW', padx=(10, 10))
     platform_entry = tk.Entry(announcement_frame, width=5)
     platform_entry.grid(row=0, column=5, sticky='EW', padx=(0, 10))
 
@@ -69,11 +69,7 @@ def createAnnouncementManager(left_frame, root):
     # updates the announcements to db
     def handleUpdate():
         global announcement_canvas_data
-        if platform_entry.get() == "":
-            platform = "+"
-        else:
-            platform = platform_entry.get()
-        controller.dbSet(announcement_canvas_data, f"announcement/{type_box.get()}/{station_entry.get()}/{platform}")
+        controller.dbSet(announcement_canvas_data, f"announcement/{type_box.get()}/{station_entry.get()}/{platform_entry.get()}")
 
     update_button = tk.Button(announcement_frame, text="Update", state=tk.DISABLED, command=lambda: handleUpdate())
     update_button.grid(row=3, column=0, columnspan=6, sticky='NSEW', pady=7, padx=7)
@@ -82,7 +78,7 @@ def createAnnouncementManager(left_frame, root):
     def handleFindButton():
         pass
         global announcement_canvas_data
-        if not controller.validateEntries([station_entry, type_box]):
+        if not controller.validateEntries([station_entry, type_box, platform_entry]):
             return
         update_button.config(state=tk.NORMAL)
         display_find.master.focus()

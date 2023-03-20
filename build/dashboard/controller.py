@@ -12,8 +12,8 @@ cursor.execute("CREATE TABLE IF NOT EXISTS topics (id INTEGER PRIMARY KEY, topic
 
 # creates an "announcements" table if it does not exist
 cursor.execute('''CREATE TABLE IF NOT EXISTS announcements
-                (id INTEGER PRIMARY KEY, topic_id INTEGER, announcement TEXT,
-                 FOREIGN KEY (topic_id) REFERENCES topics(id))''')
+                (id INTEGER PRIMARY KEY, announcement TEXT,
+                 topic_id INTEGER REFERENCES topics(id) ON DELETE SET NULL)''')
 db.commit()
 
 
@@ -169,6 +169,13 @@ def dbClear():
     cursor.execute('DELETE FROM announcements')
     db.commit()
     createPopup("Success", "Database tables cleared successfully")
+
+
+# clears the tables in the database
+def dbClearAnnouncements():
+    cursor.execute('DELETE FROM announcements')
+    db.commit()
+    createPopup("Success", "Announcements cleared successfully")
 
 
 # retrieves all data from the topics and announcements tables

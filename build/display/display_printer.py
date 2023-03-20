@@ -10,7 +10,7 @@ reactive_train_data = Reactive([])
 reactive_train_data2 = Reactive([])
 reactive_display_name = Reactive('')
 reactive_warning = Reactive('')
-reactive_notification = Reactive('')
+reactive_announcements = Reactive([])
 reactive_passing = Reactive(False)
 passing_train_time = ''
 
@@ -49,11 +49,12 @@ def printPassingTrainOnDisplay(msg):
         print(passing_train_time)
 
 
-def printNotificationOnDisplay(msg):
-    global reactive_notification
-    reactive_notification.value = msg
+def printAnnouncementsOnDisplay(msg):
+    parsed = json.loads(msg)
+    global reactive_announcements
+    reactive_announcements.value = parsed
     # Color blue with ANSI code
-    print(f"\033[34m{msg} \033[00m")
+    print(f"\033[34m{parsed} \033[00m")
 
 
 def printWarningOnDisplay(msg):

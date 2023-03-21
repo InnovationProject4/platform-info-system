@@ -1,3 +1,6 @@
+import threading
+import sqlite3
+
 class Singleton:
     ''' A thread-safe approach to singletons '''
 
@@ -12,9 +15,9 @@ class Singleton:
                 # instance is still nonexistent.
                 if not cls._instance:
                     cls._instance = super().__new__(cls)
+                    cls._instance._connection = sqlite3.connect(':memory:', check_same_thread=False)
+                    print("invoked")
         return cls._instance
-
-
 
 '''
 Unit-test

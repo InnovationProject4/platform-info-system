@@ -1,135 +1,132 @@
-''''
-    Decorator based flyweight Observable pattern.
-'''
-import os
-os.environ['PATH'] = 'export PATH=\"/usr/local/opt/tcl-tk/bin:\$PATH\""'
-os.environ['TCL_LIBRARY'] = '/usr/local/Cellar/tcl-tk/8.6.13_1'
-os.environ['TK_LIBRARY'] = '/usr/local/Cellar/tcl-tk/8.6.13_1'
-import tkinter as tk
 import weakref
+from collections import UserDict
+
+''' 
+Contains several classes and functions related to obdservables and reactive values.
+'''
+
+__all__ = [
+    'Event',
+    'EventSet',
+    'Observer',
+    'Reactive',
+    'MutationObserver',
+    'observable'
+]
+
 
 class Event(object):
-    __slots__ = ("callbacks")
     def __init__(self):
         self.callbacks = weakref.WeakSet()
 
     def notify(self, *args, **kwargs):
-        for callback in self.callbacks:
-            callback(*args, **kwargs)
+        [callback(*args, **kwargs) for callback in self.callbacks]
+        
 
     def register(self, callback):
-        self.callbacks.add(callback)
-        return callback
+      self.callbacks.add(callback)
+      return callback
+
+
+class EventSet(UserDict):
+    def __missing__(self, key):
+      self.data[key] = Event()
+      return self.data[key]
+    
+    def __getattr__(self, key):
+        event = self.get(key, None)
+        if event is None: event = self.__missing__(key)
+        return event
 
 
 
-class EventBootstrap(object):
-    __slots__ = ('__dict__')
-       
-    def attach(self, prop):
-        setattr(self, prop, Event())
-
-    def detach(self, prop):
-        slot = getattr(prop)
-        del slot
-
-
-class Observable:
-    __slots__ = ("events")
-    def __init__(self):
-        self._events = {}
-
-    def attachEvent(self, prop):
-        if prop not in self._events:
-            self._events[prop] = Event()
-
-    def detachEvent(self, prop):
-        event = getattr(prop)
-        del event
-
-
-
-def observe(obj):
-    if callable(obj):
-        ''' is unbound function '''
-        event = Event()
-        def unboundWrapperGetter(*args, **kwargs):
-            result = obj(*args, **kwargs)
-            event.notify(obj, obj.__name__, result)
-            return result
-        
-        unboundWrapperGetter.event = event
-
-        return unboundWrapperGetter
-    elif not obj:
-         raise TypeError("Please specify an attribute or a method to observe.")
-
-    'is attribute key'
-    attr_key = obj
-    value_key = '_%s' % attr_key
-
-
-    def attr_getter(object):
-        return getattr(object, value_key)
-
-    def attr_setter(object, value):
-        setattr(object, value_key, value)
-        object._events[attr_key].notify(object, attr_key, value)
-
-    def boundWrapperGetter(*args, **kwargs):
-            value = prop(*args, **kwargs)
-            args[0]._events[key].notify(prop, key, value)
-            return value
-
-    def attribute_decorator(prop):
-        if isinstance(prop, type):
-            '''is class'''
-            cls = prop
-
-        else: raise TypeError("Please specify an observable class.")
-
-        if hasattr(cls, attr_key) and callable(getattr(cls, attr_key)):
-            '''attribute is method'''
-            setattr(cls, value_key, property(fget=boundWrapperGetter))
-            return cls
-
-        '''attribute is value'''
-        setattr(cls, value_key, property(fget=attr_getter, fset=attr_setter))
-        return cls
-
-    return attribute_decorator
-
-        
-
-
-def observable(attr_key):
-    if not attr_key:
-        raise TypeError("Please specify an attribute to observe.")
-
-    value_key = '_%s' % attr_key 
-    event_key = '_%s_eventListener' % attr_key
+'''helper to create observable property on attribute'''
+def observed_property(attr):
+    key = '_%s' % attr
 
     def getter(obj):
-        return getattr(obj, value_key)
+        return getattr(obj, key)
 
     def setter(obj, value):
-        event = getattr(obj, event_key)
-        setattr(obj, value_key, value)
-        event.notify(obj, attr_key, value)
+        old = obj.__dict__.get(key)
+        setattr(obj, key, value)
+        obj.events[attr].notify(attr, old, value)
 
-    def classWrapper(cls):
-        instance = cls.__init__
-        def __init__(self, *args, **kwargs):
-            setattr(self, event_key, Event())
-            instance(self,*args,**kwargs)
+    return property(fget=getter, fset=setter)
 
-        setattr(cls, attr_key, property(fget=getter, fset=setter))
-        setattr(cls, '__init__', __init__)
-        return cls
+'''helper to create observable method'''
+def observed_method(attr):
+    key = attr.__name__
+    def boundWrapperGetter(self, *args, **kwargs):
+        result = attr(self, *args, **kwargs)
+        self.events[key].notify(key, result)
+        return result
 
-    return classWrapper
+    return boundWrapperGetter
 
 '''
+ Decorator function, which is used to turn class attributes into observables. It is to be used in combination with Observer and
+ MutationObserver classes.
+'''
+def observable(*attributes):
+    if callable(attributes[0]):
+        ''' is unbound function '''
+        event = Event()
+        funct = attributes[0]
+        def unboundWrapper(*args, **kwargs):
+            result = funct(*args, **kwargs)
+            event.notify(funct.__name__, result, *args)
+            return result
+        
+        funct.event = event
+        return funct
+
+    ''' is attribute '''
+    def decorator(cls):
+        if not issubclass(cls, Observer): raise TypeError("Class must be a subclass of Observable.")
+
+        for attr in attributes:
+            if hasattr(cls, attr):
+                prop = getattr(cls, attr)
+                name = prop.__name__
+                setattr(cls, name, observed_method(prop))
+                
+            else:
+                key = '_%s' % attr
+                setattr(cls, attr, observed_property(attr))
+                
+        return cls
+    return decorator
+
+
+'''
+A base class for events. Must be used together with @observable decorator to function properly.
+
+'''
+class Observer:
+    __slots__ = ('events')
+    def __init__(self):
+        self.events = EventSet()
+
+
+'''
+A reactive value that triggers updates when its value is changed.
+It has a value property that can be set to trigger updates, and a watch method to register callbacks to be called on updates.
+
+example usage:
+
+counter = Reactive(0)   # 1. reactive value that is added to ButtonText
+
+                        # 2. function that fires the event 'change'
+def increment():
+    counter.value = counter.value + 1
+
+                        # 3.on update change button text to reactive value
+self.button = ButtonText(self.root, text=counter)
+reactive.watch(lambda : self.config(text=reactive.value))
+
+                        # 4. When increment is invoked, reactive.watch launches to update button's self.config.text
+                        #
 '''
 class Reactive:
     __slots__ = ("_value", "_watchers")
@@ -149,7 +146,6 @@ class Reactive:
     def _notify(self):
         for callback in self._watchers:
             callback()
-         
                 
     def watch(self, callback):
         self._watchers.add(callback)
@@ -163,3 +159,29 @@ class Reactive:
 
 
 
+'''
+A base class that provides an Event for subclasses to define a "mutation" event that fires when an attribute is set.
+Subclasses may use __setattr__ or __setitem__ to trigger the mutation event.
+
+example usage:
+
+class Data(MutationObserver):
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+
+data = Data("container1")
+
+@data.events.register
+def test(key, old, value):
+ print("key", key, value) 
+'''
+class MutationObserver:
+    #__slots__ = ('_events')
+    def __init__(self):
+        self.events = Event()
+
+    def __setattr__(self, key, value):
+        old = self.__dict__.get(key)
+        self.__dict__[key] = value
+        self.events.notify(key, old, value)

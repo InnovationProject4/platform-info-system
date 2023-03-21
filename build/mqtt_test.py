@@ -10,11 +10,13 @@ message = {
 }
 
 def initialize():
-    conn = Connection("rata-mqtt.digitraffic.fi", 1883)
+    conn = Connection("84.253.229.22", 1883)
     conn.connect()
     conn.set_user_data(json.dumps(message))
-    conn.subscribe("trains-by-station/KKN", lambda res, user, message:(
-        print(res.json())
+    conn.subscribe("station/PSL/1/#", lambda res, user, message:(
+        print(message.topic),
+        print(message.payload.decode()),
+        print()
     ))
     return conn
 
@@ -25,6 +27,6 @@ if __name__ == '__main__':
 
     try:
         while True:
-            time.sleep(1)
+            time.sleep(10)
     except:
         conn.disconnect()

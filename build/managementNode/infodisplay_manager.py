@@ -10,7 +10,7 @@ client = paho.Client()
 queues = {}
 
 
-# This function publishes messages from the queues to the appropriate MQTT topics
+# publishes messages from the queues to the appropriate MQTT topics
 def publish_messages():
     while True:
         for station_code, queue in queues.items():
@@ -39,14 +39,14 @@ timer_thread = threading.Thread(target=publish_messages)
 timer_thread.start()
 
 
-# This function is called when the MQTT client connects to the broker, function subscribes to the topics we are sending information to
+# subscribes to the topics we are sending information to
 def on_connect(client, userdata, flags, rc):
     print("connected")
     client.subscribe("station/information")
     client.subscribe("station/remove")
 
 
-# This function is called when a message is received on any of the subscribed topics
+# function is called when a message is received on any of the subscribed topics
 def on_message(client, userdata, message):
     payload = message.payload.decode('utf-8')
     if message.topic == "station/information":

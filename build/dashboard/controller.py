@@ -8,12 +8,12 @@ db = sqlite3.connect("sqlite3.db")
 cursor = db.cursor()
 
 # creates a "topics" table if it does not exist
-cursor.execute("CREATE TABLE IF NOT EXISTS topics (id INTEGER PRIMARY KEY, topic TEXT)")
+cursor.execute("CREATE TABLE IF NOT EXISTS topics (id INTEGER PRIMARY KEY, topic TEXT UNIQUE)")
 
 # creates an "announcements" table if it does not exist
 cursor.execute('''CREATE TABLE IF NOT EXISTS announcements
                 (id INTEGER PRIMARY KEY, announcement TEXT,
-                 topic_id INTEGER REFERENCES topics(id) ON DELETE SET NULL)''')
+                 topic_id INTEGER REFERENCES topics(id))''')
 db.commit()
 
 
@@ -141,10 +141,20 @@ def dbSet(data, topic):
     cursor.execute("SELECT id FROM topics WHERE topic = ?", (topic,))
     topic_id = cursor.fetchone()[0]
     cursor.execute("DELETE FROM announcements WHERE topic_id = ?", (topic_id,))
-    for tuple_label in data:
-        label = tuple_label[0]
+
+    # If the data list is empty, insert an empty announcement for the topic
+    if len(data) == 0:
         cursor.execute("INSERT INTO announcements (topic_id, announcement) VALUES (?, ?)",
-                       (topic_id, label.cget("text")))
+                       (topic_id, ""))
+    else:
+        # If the data list is not empty, insert all announcements for the topic
+        announcements = [(topic_id, label.cget("text")) for (label, _) in data]
+        cursor.executemany("INSERT INTO announcements (topic_id, announcement) VALUES (?, ?)", announcements)
+
+    cursor.execute("SELECT * FROM topics")
+    topics = cursor.fetchall()
+    print(topics)
+
     db.commit()
     createPopup("Success", "Success")
 
@@ -154,7 +164,7 @@ def dbGet(topic):
     cursor.execute('''SELECT announcements.announcement
                       FROM announcements
                       JOIN topics ON announcements.topic_id = topics.id
-                      WHERE topics.topic = ?''', (topic,))
+                      WHERE topics.topic = ? AND announcements.announcement != "" ''', (topic,))
     announcements = cursor.fetchall()
     announcement_list = [row[0] for row in announcements]
     if announcement_list is None:
@@ -171,9 +181,19 @@ def dbClear():
     createPopup("Success", "Database tables cleared successfully")
 
 
-# clears the tables in the database
+# clears the announcements in the database
 def dbClearAnnouncements():
-    cursor.execute('DELETE FROM announcements')
+    # select distinct topics from the topics table
+    cursor.execute("SELECT id FROM topics")
+    topics = cursor.fetchall()
+
+    # delete all announcements
+    cursor.execute("DELETE FROM announcements")
+    print(topics)
+    # insert an empty announcement for each topic
+    for topic in topics:
+        cursor.execute("INSERT INTO announcements (topic_id, announcement) VALUES (?, '')",
+                       (topic[0],))
     db.commit()
     createPopup("Success", "Announcements cleared successfully")
 
@@ -182,12 +202,13 @@ def dbClearAnnouncements():
 def dbGetAll():
     cursor.execute('SELECT * FROM topics JOIN announcements ON topics.id = announcements.topic_id')
     result_set = cursor.fetchall()
+    print(result_set)
 
     topics = {}
     # groups the announcements by topic
     for row in result_set:
         topic = row[1]  # topic name from the second column
-        announcement = row[4]  # announcement from the fifth column
+        announcement = row[3]  # announcement from the forth column
 
         # adds the announcements to the list of messages for this topic
         if topic in topics:

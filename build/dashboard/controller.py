@@ -2,6 +2,8 @@ import configparser
 import sys
 import sqlite3
 import tkinter as tk
+import uuid
+
 from messaging.telemetry import Connection
 
 config = configparser.ConfigParser()
@@ -11,6 +13,8 @@ repository = config.get('sqlite', 'repository')
 db = sqlite3.connect(repository)
 cursor = db.cursor()
 
+new_uuid = str(uuid.uuid4())
+
 # creates a "topics" table if it does not exist
 cursor.execute("CREATE TABLE IF NOT EXISTS topics (id INTEGER PRIMARY KEY, topic TEXT UNIQUE)")
 
@@ -19,8 +23,6 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS announcements
                 (id INTEGER PRIMARY KEY, announcement TEXT,
                  topic_id INTEGER REFERENCES topics(id))''')
 db.commit()
-
-
 
 ip = config.get('mqtt-broker', 'ip')
 port = config.get('mqtt-broker', 'port')
@@ -126,8 +128,8 @@ def validateEntries(required_entries):
 
 def connectToDisplays(log):
     conn.subscribe_multiple([
-        ("management/#", lambda client, userdata, message: (
-            insertToLog(log, f"{message.payload.decode()}\n")
+        ("management/+", lambda client, userdata, message: (
+            insertToLog(log, f"{message.payload.decode()}\n\n")
         ))])
 
 
@@ -155,10 +157,8 @@ def dbSet(data, topic):
         cursor.executemany("INSERT INTO announcements (topic_id, announcement) VALUES (?, ?)", announcements)
 
     cursor.execute("SELECT * FROM topics")
-    topics = cursor.fetchall()
-    print(topics)
-
     db.commit()
+    conn.publish(f"management/{new_uuid}/update", "")
     createPopup("Success", "Success")
 
 

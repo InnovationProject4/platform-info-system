@@ -18,30 +18,30 @@ def main():
     if args.view == "splitview" and None not in [args.s, args.left, args.right]:
         display = types.DualPlatform(args.s, args.left, args.right)
         split_view.App()
-        mqtt.createConnection(display)
+        mqtt.createConnection(display, args.view)
 
     elif args.view == "tableview" and args.s is not None and args.p is None:
         display = types.Central(args.s)
         # Setting column names and table row count
         timetable_view.App(["Time", "Notice", "Platform", "Train", "Destination"], 10)
-        mqtt.createConnection(display)
+        mqtt.createConnection(display, args.view)
 
     elif args.view == "tableview" and None not in [args.s, args.p]:
         display = types.Platform(args.s, args.p)
         # Setting column names and table row count
         timetable_view.App(["Time", "Notice", "Train", "Destination"], 5)
-        mqtt.createConnection(display)
+        mqtt.createConnection(display, args.view)
 
     elif args.view == "platformview" and None not in [args.s, args.p]:
         display = types.Platform(args.s, args.p)
         # Setting column names and table row count
         platform_view.App()
-        mqtt.createConnection(display)
+        mqtt.createConnection(display, args.view)
 
     elif args.view == "infoview" and args.s is not None:
         display = types.Information(args.s)
         info_view.App()
-        mqtt.createConnection(display)
+        mqtt.createConnection(display, args.view)
 
     else:
         print("Invalid arguments")

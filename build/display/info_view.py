@@ -49,7 +49,8 @@ class App(threading.Thread):
         warning_label.place(relx=0.5, rely=0.5, anchor=CENTER)
         dp.reactive_warnings.watch(lambda: updateNotification())
 
-        announcements_label = Label(main_frame, text="", fg='white', bg='#031926', justify="left", font=('Calibri Light', 15))
+        announcements_label = Label(main_frame, text="", fg='white', bg='#031926', justify="left",
+                                    anchor="w", font=('Calibri Light', 15))
         announcements_label.grid(row=0, column=0, sticky="wens", padx=10, pady=10, )
         announcements_label.bind('<Configure>',
                          lambda e: announcements_label.configure(wraplength=self.root.winfo_width()))
@@ -77,7 +78,7 @@ class App(threading.Thread):
             if len(dp.reactive_announcements.value) > 0 and dp.reactive_announcements.value[0] != '':
                 text = ""
                 for announcement in dp.reactive_announcements.value:
-                    text += '◦ ' + announcement + '\n\n'
+                    text += '  ◦ ' + announcement + '\n\n'
                 announcements_label.configure(text=text)
 
         def updateScreen():

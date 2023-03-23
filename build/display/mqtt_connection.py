@@ -13,8 +13,7 @@ conn = Connection(ip, int(port))
 new_uuid = str(uuid.uuid4())
 
 
-
-def createConnection(new_display):
+def createConnection(new_display, type):
     global display
     display = new_display
     # Last will message if connection disconnects without disconnect()
@@ -26,7 +25,13 @@ def createConnection(new_display):
         print("Connection to the broker failed")
         sys.exit()
 
-    conn.publish(f"management/{new_uuid}", f"Connected: {new_uuid}")
+    conn.publish(f"management/{new_uuid}", f"Connected: {new_uuid}\n"
+                                           f"- Display: {type}\n"
+                                           f"- Station: {new_display.station}")
+
+    # Alert the aggregator to publish data from database
+    conn.publish(f"management/{new_uuid}/update", "")
+
     conn.subscribe_multiple(display.handleSubscriptions())
 
 

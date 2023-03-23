@@ -6,8 +6,9 @@ from datetime import datetime
 
 class App(threading.Thread):
 
-    def __init__(self, announcement_id=0):
+    def __init__(self, announcement_id=0, warning_id=0):
         self.announcement_id = announcement_id
+        self.warning_id = warning_id
         threading.Thread.__init__(self)
         self.root = None
         self.start()
@@ -73,34 +74,45 @@ class App(threading.Thread):
 
         warning_label = Label(warning_frame, text="", fg='red', bg='#0a4a70', font=('Calibri Light', 15))
         warning_label.place(relx=0.5, rely=0.5, anchor=CENTER)
-        dp.reactive_warning.watch(lambda: updateLabels(dp.reactive_warning.value, warning_label))
+        dp.reactive_warnings.watch(lambda: updateNotification())
 
-        # method for going through the different announcements
-        def changeAnnouncement():
+        # Method for going through the different Notifications
+        def changeNotification():
+            # Loops through the announcements
             if self.announcement_id >= len(dp.reactive_announcements.value):
                 self.announcement_id = 0
             if len(dp.reactive_announcements.value) > 0:
                 announcement_label.config(text=dp.reactive_announcements.value[self.announcement_id])
             self.announcement_id += 1
-            self.root.after(10000, changeAnnouncement)
+
+            # Loops through the warnings
+            if self.warning_id >= len(dp.reactive_warnings.value):
+                self.warning_id = 0
+            if len(dp.reactive_warnings.value) > 0:
+                warning_label.config(text=dp.reactive_warnings.value[self.warning_id])
+            self.warning_id += 1
+
+            self.root.after(10000, changeNotification)
 
         def updateNotification():
             # shows passing alert if there is a passing train
             if dp.reactive_passing.value:
                 announcement_label.grid_forget()
                 passing_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
+            # if else show announcement label
             elif len(dp.reactive_announcements.value) > 0:
                 passing_label.grid_forget()
                 announcement_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
+            # shows warning alert of there are any
+            if len(dp.reactive_warnings.value) > 0 and dp.reactive_warnings.value[0] != '':
+                warning_frame.tkraise()
+            else:
+                main_frame.tkraise()
 
         def updateLabels(reactive, label):
             label.config(text=reactive)
 
         def updateScreen():
-            if dp.reactive_warning.value != '':
-                warning_frame.tkraise()
-            else:
-                main_frame.tkraise()
             dp.checkPassingTrain()
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
             checkResize()
@@ -138,6 +150,6 @@ class App(threading.Thread):
         main_frame.grid(row=1, column=0, sticky="NSEW")
         main_frame.tkraise()
 
-        changeAnnouncement()
+        changeNotification()
         updateScreen()
         self.root.mainloop()

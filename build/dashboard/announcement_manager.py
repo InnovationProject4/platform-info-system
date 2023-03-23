@@ -25,14 +25,14 @@ def createAnnouncementManager(left_frame, root):
 
     # creating entry fields for inputting notify type, station code and platform
     tk.Label(announcement_frame, text="Notify type*", bg="#d8d8d8").grid(row=0, column=0, sticky='NSEW', padx=(10, 10))
-    type_box = ttk.Combobox(announcement_frame, state="readonly", values=["cancelled", "delayed", "alert", "global"], width=6)
+    type_box = ttk.Combobox(announcement_frame, state="readonly", values=["info", "alert"], width=6)
     type_box.grid(row=0, column=1, sticky='EW')
 
     tk.Label(announcement_frame, text="Station code*", bg="#d8d8d8").grid(row=0, column=2, sticky='NSEW', padx=(10, 10))
     station_entry = tk.Entry(announcement_frame, width=5)
     station_entry.grid(row=0, column=3, sticky='EW')
 
-    tk.Label(announcement_frame, text="Platfrom id*", bg="#d8d8d8").grid(row=0, column=4, sticky='NSEW', padx=(10, 10))
+    tk.Label(announcement_frame, text="Platfrom id", bg="#d8d8d8").grid(row=0, column=4, sticky='NSEW', padx=(10, 10))
     platform_entry = tk.Entry(announcement_frame, width=5)
     platform_entry.grid(row=0, column=5, sticky='EW', padx=(0, 10))
 
@@ -69,7 +69,10 @@ def createAnnouncementManager(left_frame, root):
     # updates the announcements to db
     def handleUpdate():
         global announcement_canvas_data
-        controller.dbSet(announcement_canvas_data, f"announcement/{type_box.get()}/{station_entry.get()}/{platform_entry.get()}")
+        topic = f"announcement/{type_box.get()}/{station_entry.get()}"
+        if platform_entry.get() != '':
+            topic += f"/{platform_entry.get()}"
+        controller.dbSet(announcement_canvas_data, topic)
 
     update_button = tk.Button(announcement_frame, text="Update", state=tk.DISABLED, command=lambda: handleUpdate())
     update_button.grid(row=3, column=0, columnspan=6, sticky='NSEW', pady=7, padx=7)
@@ -78,7 +81,7 @@ def createAnnouncementManager(left_frame, root):
     def handleFindButton():
         pass
         global announcement_canvas_data
-        if not controller.validateEntries([station_entry, type_box, platform_entry]):
+        if not controller.validateEntries([station_entry, type_box]):
             return
         update_button.config(state=tk.NORMAL)
         display_find.master.focus()

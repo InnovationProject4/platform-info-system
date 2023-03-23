@@ -6,7 +6,9 @@ from datetime import datetime
 
 class App(threading.Thread):
 
-    def __init__(self):
+    def __init__(self, announcement_id=0, warning_id=0):
+        self.announcement_id = announcement_id
+        self.warning_id = warning_id
         threading.Thread.__init__(self)
         self.root = None
         self.start()
@@ -47,13 +49,13 @@ class App(threading.Thread):
         time_label = Label(top_frame, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 15))
         time_label.grid(row=0, column=1, sticky="E", padx=(0, 20))
 
-        notification_label = Label(self.root, text=dp.reactive_notification.value, fg='white', bg='#0a4a70', font=('Calibri Light', 15))
-        notification_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
-        dp.reactive_notification.watch(lambda: updateLabels(dp.reactive_notification, notification_label))
+        announcement_label = Label(self.root, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 15))
+        announcement_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
+        dp.reactive_announcements.watch(lambda: updateNotification())
 
         warning_label = Label(warning_frame, text="", fg='red', bg='#0a4a70', font=('Calibri Light', 15))
         warning_label.place(relx=0.5, rely=0.5, anchor=CENTER)
-        dp.reactive_warning.watch(lambda: updateLabels(dp.reactive_warning, warning_label))
+        dp.reactive_warnings.watch(lambda: updateNotification())
 
         leftframe = Frame(main_frame, bg='#36a8eb')
         leftframe.grid(row=0, column=0, sticky="NSEW")
@@ -64,6 +66,31 @@ class App(threading.Thread):
         dp.reactive_train_data.watch(lambda: updateTrains(dp.reactive_train_data, left_labels))
         right_labels = gui_helper.configureDualPlatformGrid(rightframe, Grid, gui_helper.fillRightSide)
         dp.reactive_train_data2.watch(lambda: updateTrains(dp.reactive_train_data2, right_labels))
+
+        # Method for going through the different Notifications
+        def changeNotification():
+            # Loops through the announcements
+            if self.announcement_id >= len(dp.reactive_announcements.value):
+                self.announcement_id = 0
+            if len(dp.reactive_announcements.value) > 0:
+                announcement_label.config(text=dp.reactive_announcements.value[self.announcement_id])
+            self.announcement_id += 1
+
+            # Loops through the warnings
+            if self.warning_id >= len(dp.reactive_warnings.value):
+                self.warning_id = 0
+            if len(dp.reactive_warnings.value) > 0:
+                warning_label.config(text=dp.reactive_warnings.value[self.warning_id])
+            self.warning_id += 1
+
+            self.root.after(10000, changeNotification)
+
+        def updateNotification():
+            # shows warning alert of there are any
+            if len(dp.reactive_warnings.value) > 0 and dp.reactive_warnings.value[0] != '':
+                warning_frame.tkraise()
+            else:
+                main_frame.tkraise()
 
         def updateLabels(reactive, label):
             label.config(text=reactive.value)
@@ -85,10 +112,6 @@ class App(threading.Thread):
                     label['text'] = ''
 
         def updateScreen():
-            if dp.reactive_warning.value != '':
-                warning_frame.tkraise()
-            else:
-                main_frame.tkraise()
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
             checkResize()
             self.root.after(1000, updateScreen)
@@ -111,7 +134,7 @@ class App(threading.Thread):
 
         def resizeFonts(s_name, s_warning, s_time, s_trains, s_notification):
             display_name_label['font'] = ('Calibri Light', s_name)
-            notification_label['font'] = ('Calibri Light', s_notification)
+            # notification_label['font'] = ('Calibri Light', s_notification)
             warning_label['font'] = ('Calibri Light', s_warning)
             time_label['font'] = ('Calibri Light', s_time)
             for lLabel, rLabel in zip(left_labels, right_labels):
@@ -123,5 +146,6 @@ class App(threading.Thread):
         main_frame.grid(row=1, column=0, sticky="NSEW")
         main_frame.tkraise()
 
+        changeNotification()
         updateScreen()
         self.root.mainloop()

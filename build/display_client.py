@@ -1,6 +1,6 @@
 import argparse
 import display.display_types as types
-from display import timetable_view, split_view, platform_view
+from display import timetable_view, split_view, platform_view, info_view
 from display import mqtt_connection as mqtt
 
 
@@ -16,26 +16,31 @@ def main():
     args = parser.parse_args()
 
     if args.view == "splitview" and None not in [args.s, args.left, args.right]:
-        display = types.DualPlatformDisplay(args.s, args.left, args.right)
+        display = types.DualPlatform(args.s, args.left, args.right)
         split_view.App()
         mqtt.createConnection(display)
 
     elif args.view == "tableview" and args.s is not None and args.p is None:
-        display = types.TableCentralDisplay(args.s)
+        display = types.Central(args.s)
         # Setting column names and table row count
         timetable_view.App(["Time", "Notice", "Platform", "Train", "Destination"], 10)
         mqtt.createConnection(display)
 
     elif args.view == "tableview" and None not in [args.s, args.p]:
-        display = types.TablePlatformDisplay(args.s, args.p)
+        display = types.Platform(args.s, args.p)
         # Setting column names and table row count
         timetable_view.App(["Time", "Notice", "Train", "Destination"], 5)
         mqtt.createConnection(display)
 
     elif args.view == "platformview" and None not in [args.s, args.p]:
-        display = types.TablePlatformDisplay(args.s, args.p)
+        display = types.Platform(args.s, args.p)
         # Setting column names and table row count
         platform_view.App()
+        mqtt.createConnection(display)
+
+    elif args.view == "infoview" and args.s is not None:
+        display = types.Information(args.s)
+        info_view.App()
         mqtt.createConnection(display)
 
     else:

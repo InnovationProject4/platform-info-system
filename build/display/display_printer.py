@@ -9,7 +9,7 @@ import os
 reactive_train_data = Reactive([])
 reactive_train_data2 = Reactive([])
 reactive_display_name = Reactive('')
-reactive_warning = Reactive('')
+reactive_warnings = Reactive([])
 reactive_announcements = Reactive([])
 reactive_passing = Reactive(False)
 passing_train_time = ''
@@ -58,10 +58,11 @@ def printAnnouncementsOnDisplay(msg):
 
 
 def printWarningOnDisplay(msg):
-    global reactive_warning
-    reactive_warning.value = msg
+    parsed = json.loads(msg)
+    global reactive_warnings
+    reactive_warnings.value = parsed
     # Color red with ANSI code
-    print(f"\033[91m{msg} \033[00m")
+    print(f"\033[91m{parsed} \033[00m")
 
 
 def printTablePlatformDisplay(msg):

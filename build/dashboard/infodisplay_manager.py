@@ -56,7 +56,7 @@ def createInfodisplayManager(left_frame, root):
     # updates the announcements to db
     def handleUpdate():
         global infodisplay_canvas_data
-        controller.dbSet(infodisplay_canvas_data, f"announcement/+/{station_entry.get()}")
+        controller.dbSet(infodisplay_canvas_data, f"announcement/infoview/{station_entry.get()}")
 
     update_button = tk.Button(infodisplay_frame, text="Update", state=tk.DISABLED, command=lambda: handleUpdate())
     update_button.grid(row=3, column=0, columnspan=3, sticky='NSEW', pady=7, padx=7)
@@ -69,7 +69,7 @@ def createInfodisplayManager(left_frame, root):
         update_button.config(state=tk.NORMAL)
         display_find.master.focus()
         display_find.grid_forget()
-        items = controller.dbGet(f"announcement/+/{station_entry.get()}")
+        items = controller.dbGet(f"announcement/infoview/{station_entry.get()}")
         controller.fillRows(table_frame, infodisplay_canvas_data, items)
 
     # By default the button is shown on top of message entry and add button

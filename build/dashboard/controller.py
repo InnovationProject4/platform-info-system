@@ -4,7 +4,11 @@ import sqlite3
 import tkinter as tk
 from messaging.telemetry import Connection
 
-db = sqlite3.connect("sqlite3.db")
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+repository = config.get('sqlite', 'repository')
+db = sqlite3.connect(repository)
 cursor = db.cursor()
 
 # creates a "topics" table if it does not exist
@@ -17,8 +21,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS announcements
 db.commit()
 
 
-config = configparser.ConfigParser()
-config.read('config.ini')
+
 ip = config.get('mqtt-broker', 'ip')
 port = config.get('mqtt-broker', 'port')
 # creating a mqtt client

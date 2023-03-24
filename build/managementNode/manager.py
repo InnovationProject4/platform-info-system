@@ -5,6 +5,7 @@ from messaging.telemetry import Connection
 from utils.database.sqlite import PersistentConnection
 import utils.database.model.display as dao
 import configparser
+from managementNode import station_names
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -20,6 +21,8 @@ t_filter = ['trainType', 'trainCategory', 'commuterLineID']
 
 # select the desired keys from  the 'timeTableRows' list
 tt_filter = ['type', 'cancelled', 'scheduledTime', 'differenceInMinutes', 'liveEstimateTime', 'commercialTrack', 'cause']
+
+list_of_stations = station_names.get_station_names()
 
 class Manager:
     def __init__(self):
@@ -112,18 +115,37 @@ class Manager:
                 topic = f"station/{STATION}/{platform_id}/{transit}/{transport_type}"
                 self.conn.publish(topic, json.dumps(train))
 
+       #TODO: Check P & I trains for double arrival/departure at same station
     @staticmethod
     def parse(response):
-        # TODO: parse response for destination and commuter
         filtered = {key: response[key] for key in t_filter}
+        filtered["allStops"] = []
+
+        #Adding list of all the stops
+        for station in response["timeTableRows"]:
+
+            station_short_code = station["stationShortCode"]
+            station_name = station_names.get_station_name(station_short_code, list_of_stations)
+            filtered["allStops"].append(station_name)
+
+        filtered["allStops"] = list(dict.fromkeys(filtered["allStops"]))
+        #Assigning destination for the train
+        i = len(filtered["allStops"])-1
+        destination = filtered["allStops"][i]
+
+        filtered["destination"] = destination
         filtered["timeTableRows"] = [{key: row.get(key, None) for key in tt_filter} for row in response['timeTableRows'] if row['stationShortCode'] == STATION]
+
+        print(filtered["destination"])
+        print(filtered["allStops"])
         return filtered
 
 
     def aggregation(self):
         self.trains = rata.Simple('live-trains/station/' + STATION).get(payload={
+            'minutes_before_departure': 60,
             'minutes_after_departure': 0,
-            'minutes_before_arrival' : 60,
+            'minutes_before_arrival' : 0,
             'minutes_after_arrival': 0,
             'train_categories' : 'Commuter,Long-distance'
         }).onSuccess(lambda response, status, data : (

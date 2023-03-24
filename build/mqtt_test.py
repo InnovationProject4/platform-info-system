@@ -10,7 +10,7 @@ message = {
 }
 
 def initialize():
-    conn = Connection("84.253.229.22", 1883)
+    conn = Connection("localhost", 1883)
     conn.connect()
     conn.set_user_data(json.dumps(message))
     conn.subscribe("station/PSL/1/#", lambda res, user, message:(

@@ -4,9 +4,15 @@ import messaging.ratatraffic as rata
 from messaging.telemetry import Connection 
 from utils.database.sqlite import PersistentConnection
 import utils.database.model.display as dao
+import configparser
 
+config = configparser.ConfigParser()
+config.read('config.ini')
 dbconnection = PersistentConnection()
 
+
+ADDR = config.get('mqtt-broker', 'ip')
+PORT = config.getint('mqtt-broker', 'port')
 STATION = 'PSL'
 
 # select the desired keys from the top-level list
@@ -17,11 +23,11 @@ tt_filter = ['type', 'cancelled', 'scheduledTime', 'differenceInMinutes', 'liveE
 
 class Manager:
     def __init__(self):
-        self.conn = Connection('localhost', 1883)
+        self.conn = Connection(ADDR, PORT)
         self.conn.client.on_connect = self.on_connect
         
         
-        self.aggregator()
+        self.aggregation()
         self.conn.connect()
 
     def on_connect(self, client, userdata, flags, rc):
@@ -56,9 +62,8 @@ class Manager:
 
 
 
-
-
     def get_displayinfo(self):
+        ''' Get currently known displays from db '''
         with PersistentConnection() as (conn, cur):
             display = dao.Display(conn=conn)
             display.schema()
@@ -72,6 +77,9 @@ class Manager:
 
     
     def register_display(self, data):
+        '''
+            when manager receives "startup" event, it attempts to save the information from the display and send back 'ack' event message (Acknowledged)
+        '''
         with PersistentConnection() as (conn, cur):
             display = dao.Display(conn=conn)
             display.schema()
@@ -87,7 +95,7 @@ class Manager:
                 # confirm registraction
                 print("acknowledged display: ", info['uuid'])
                 self.conn.publish(f"management/{info['uuid']}", json.dumps({
-                    "event": "regack",
+                    "event": "ack",
                     "messageTimestamp": datetime.timestamp(datetime.now())
                 }))
                 
@@ -112,7 +120,7 @@ class Manager:
         return filtered
 
 
-    def aggregator(self):
+    def aggregation(self):
         self.trains = rata.Simple('live-trains/station/' + STATION).get(payload={
             'minutes_after_departure': 0,
             'minutes_before_arrival' : 60,

@@ -1,5 +1,5 @@
 import paho.mqtt.client as mqtt
-
+from utils.Event import Reactive
 '''
     Example instance:
         conn = Connection("localhost", 1883)
@@ -43,6 +43,9 @@ class Connection:
         self.client.on_connect = self.on_connect 
         self.client.on_message = self.on_message
         self.client.on_disconnect = self.on_disconnect
+        self.topics = set()
+        
+        self._event = Reactive(0)
 
     def __del__(self):
         self.disconnect()
@@ -60,6 +63,14 @@ class Connection:
         print("Connection result: {}".format(mqtt.connack_string(rc)))
         if rc != mqtt.CONNACK_ACCEPTED:
             raise IOError("couldn't establish connection to a broker")
+        self._event.value = True
+        
+    def on_connection(self, event):
+        print("OMG")
+        if self.client.is_connected():
+            event()
+        else:
+            self._event.watch(event)
 
     def on_disconnect(self, client, userdata, rc):
         print("client disconnected")
@@ -83,7 +94,9 @@ class Connection:
         if callable(callback):
             self.client.message_callback_add(topics, callback)
 
-        return self.client.subscribe(topics, qos)
+        self.client.subscribe(topics, qos)
+                
+        return self
 
 
     def subscribe_multiple(self, topics, qos=0):
@@ -108,10 +121,16 @@ class Connection:
                 self.client.message_callback_add(topic, callback)
             else: 
                 print("expected a callable, received: " + str(type(callback)))
-
-            tuples.append((topic, qos))
-
-        self.client.subscribe(tuples, qos)
+                
+            if topic not in self.topics:
+                self.topics.add(topic)
+                tuples.append((topic, qos))
+                
+        if len(tuples) > 0:
+           # print("subscribing mass", topic)
+            self.client.subscribe(tuples, qos)
+            
+        return self
     
     def unsubscribe(self, topic):
         self.client.unsubscribe(topic)

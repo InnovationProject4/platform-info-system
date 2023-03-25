@@ -14,7 +14,7 @@ dbconnection = PersistentConnection()
 
 ADDR = config.get('mqtt-broker', 'ip')
 PORT = config.getint('mqtt-broker', 'port')
-STATION = 'PSL'
+STATION = 'HPL'
 
 # select the desired keys from the top-level list
 t_filter = ['trainNumber', 'trainType', 'trainCategory', 'commuterLineID']
@@ -214,7 +214,7 @@ class Manager:
 
     def aggregation(self):
         self.trains = rata.Simple('live-trains/station/' + STATION).get(payload={
-            'minutes_before_departure': 60,
+            'minutes_before_departure': 600,
             'minutes_after_departure': 0,
             'minutes_before_arrival' : 0,
             'minutes_after_arrival': 0,

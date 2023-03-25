@@ -5,6 +5,7 @@ import display.display_printer as printer
 # Abstact class for different kinds of displays
 class Display(ABC):
 
+
     @abstractmethod
     def handleSubscriptions(self):
         pass
@@ -18,7 +19,7 @@ class Central(Display):
     def handleSubscriptions(self):
         return [
             (f"station/{self.station}/main", lambda client, userdata, message: (
-                printer.printTableCentralDisplay(message.payload.decode())
+                printer.printTableCentralDisplay(message.payload.decode(), self.staton)
             )),
             (f"announcement/alert/{self.station}", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())
@@ -37,8 +38,11 @@ class Platform(Display):
 
     def handleSubscriptions(self):
         return [
-            (f"station/{self.station}/{self.platform_number}", lambda client, userdata, message: (
-                printer.printTablePlatformDisplay(message.payload.decode())
+
+            #(f"station/{self.station}/{self.platform_number}/DEPARTURE/#", lambda client, userdata, message: (
+            (f"station/{self.station}/+/DEPARTURE/#", lambda client, userdata, message: (
+                #printer.printTablePlatformDisplay(message.payload.decode(), self.platform_number)
+                printer.addTrains(message.payload.decode())
             )),
             (f"announcement/alert/{self.station}/{self.platform_number}", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())

@@ -1,3 +1,7 @@
+import threading
+import time
+from collections import defaultdict
+
 from tabulate import tabulate
 from datetime import datetime
 from utils.Event import Reactive
@@ -79,6 +83,87 @@ def printTablePlatformDisplay(msg):
     os.system('cls' if os.name == 'nt' else 'clear')
     print(f'-----------------{data["platform"]}-------------------')
     print(tabulate(reactive_train_data.value, headers=["Time", "Notice", "Train", "Destination"]))
+
+
+
+
+
+
+
+#TODO: Formatointi vanhaan muotoon & Destination = "Kovakoodattu stringi"
+#####################################################################################################
+#####################################################################################################
+#####################################################################################################
+
+# list to store received messages
+message_list = []
+
+# function to handle received messages
+#Loops through the trains to separate each train with only one timetable into new_trains list
+#sorts the list by scheduled time and "next_ten_trains"
+
+def format_train_data(trains):
+    new_trains = []
+    for train in trains:
+        for train_id, train_data in train.items():
+            for timetable in train_data:
+                for timetable_entry in timetable["timetable"]:
+                    new_train = {
+                        train_id: [{
+                            "trainNumber": timetable["trainNumber"],
+                            "trainType": timetable["trainType"],
+                            "trainCategory": timetable["trainCategory"],
+                            "commuterLineID": timetable["commuterLineID"],
+                            "timetable": [timetable_entry]
+                        }]
+                    }
+                    new_trains.append(new_train)
+
+    sorted_trains = sorted(new_trains, key=lambda x: x[list(x.keys())[0]][0]['timetable'][0]['scheduledTime'])
+    next_ten_trains = sorted_trains[:10]
+    print("Handling messages AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:", json.dumps(next_ten_trains))
+
+    #return sorted_data[:amount]
+
+    # do something with the messages, such as process or store them
+
+
+
+
+# start a thread to handle received messages
+def message_handler():
+
+    global message_list
+
+    while True:
+        # wait for messages to arrive
+        time.sleep(1)
+        # check if any new messages have arrived in the last second
+        last_message_time = time.time()
+        while time.time() - last_message_time < 10 and len(message_list) == 0:
+            time.sleep(1)
+        # collect messages received during the last 10 seconds into a list
+        if len(message_list) != 0:
+            messages = message_list
+            message_list = []
+            format_train_data(messages)
+
+
+
+thread = threading.Thread(target=message_handler)
+thread.start()
+
+def addTrains(msg):
+   # print("AAAAAAAAAAAAAAAADDDDDDDDDDDDD TTTTTTTTTTTTTRRRRRRRRRRRRAAAAAAAAAAAAAAIIIIIIIINNNNNS", msg)
+    global message_list
+    message_list.append(json.loads(msg))
+
+
+   #####################################################################################################
+   #####################################################################################################
+   #####################################################################################################
+
+
 
 
 def printTableCentralDisplay(msg):

@@ -5,6 +5,7 @@ from messaging.telemetry import Connection
 from utils.database.sqlite import PersistentConnection
 import utils.database.model.display as dao
 import configparser
+from collections import defaultdict
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -16,7 +17,7 @@ PORT = config.getint('mqtt-broker', 'port')
 STATION = 'PSL'
 
 # select the desired keys from the top-level list
-t_filter = ['trainType', 'trainCategory', 'commuterLineID']
+t_filter = ['trainNumber', 'trainType', 'trainCategory', 'commuterLineID']
 
 # select the desired keys from  the 'timeTableRows' list
 tt_filter = ['type', 'cancelled', 'scheduledTime', 'differenceInMinutes', 'liveEstimateTime', 'commercialTrack', 'cause']
@@ -102,7 +103,7 @@ class Manager:
             
 
 
-    def publish(self, trains):
+    def xpublish(self, trains):
         for train in trains:
             for shift in train['timeTableRows']:
                 platform_id = shift.get('commercialTrack', '?')
@@ -110,14 +111,100 @@ class Manager:
                 transport_type = train.get('trainCategory')
             
                 topic = f"station/{STATION}/{platform_id}/{transit}/{transport_type}"
-                self.conn.publish(topic, json.dumps(train))
+                self.conn.publish(topic, json.dumps(shift))
+                
+                
+    def publish(self, rows):
+        trains_baseinfo, schedules = rows
+        
+        for topic, trains in schedules.items():
+            for train_id, schedule in trains.items():
+                
+               
+                
+                train_info = trains_baseinfo[train_id]
+                
+                
+                '''
+                #print("y",train_info)
+                
+                print("----------------------------------------------------")
+                
+                
+                trainNumber = train_info.get("trainNumber")
+                commuterLineID = train_info.get("commuterLineID")
+                transport_type = train_info.get('trainCategory')
+               
+                print("TRAIN NUMBER", trainNumber, commuterLineID, "TRANSPORT TYPE:", transport_type)
+                print("TOPIC", topic)
+                print(train_id)
+                print(train_info)
+                
+                print()            
+                
+                for time in schedule:
+                    platform_id = time.get('commercialTrack', '?')
+                    transit = time.get('type')
+                    scheduledTime = time.get("scheduledTime")
+                    
+                    print("scheduledTime", scheduledTime)
+                    print("platform:", platform_id)
+                    print("transit:", transit)
+                    
+                print("----------------------------------------------------")
+                
+                train_info["timetable"] = schedule
+                '''
+                
+                self.conn.publish(topic, json.dumps(train_info))
+            
 
     @staticmethod
     def parse(response):
-        # TODO: parse response for destination and commuter
-        filtered = {key: response[key] for key in t_filter}
-        filtered["timeTableRows"] = [{key: row.get(key, None) for key in tt_filter} for row in response['timeTableRows'] if row['stationShortCode'] == STATION]
-        return filtered
+            ''' filter by keys 
+            (trainInfo, trainSchedule) '''
+            filtered = (({key: train[key] for key in t_filter},
+                        [{key: row.get(key, None) for key in tt_filter} for row in train['timeTableRows'] if row['stationShortCode'] == STATION] )
+                        for train in response)
+            
+            rows = defaultdict(lambda: defaultdict(list))
+            trains = dict()
+             #{STATION}/{platform_id}/{transit}/{transport_type}
+            for train, schedule in filtered:
+                
+                train_type = train.get("commuterLineID", None) or train.get("trainType", "?")
+                
+                
+                if train.get("commuterLineID", None):
+                    train_id = f'{train_type}'
+                    
+                else:
+                    train_id = f'{train.get("trainNumber")} - {train.get("trainType", "?")}'
+                    
+                
+                
+                #train.get("commuterLineID", None) or f'train.get("trainNumber") train.get("trainType", "?")'
+                #train_id = f'{train.get("trainNumber")}-{train_type}'
+                transport_type = train.get('trainCategory')
+                
+
+                trains[train_id] = train
+                
+                for timing in schedule:
+                    platform_id = timing.get('commercialTrack', '?')
+                    transit = timing.get('type')
+                    topic = f"station/{STATION}/{platform_id}/{transit}/{transport_type}"
+                
+                    rows[topic][train_id].append(timing)
+                
+                
+            return trains, rows
+                
+                
+                
+                
+               
+        
 
 
     def aggregation(self):
@@ -127,6 +214,8 @@ class Manager:
             'minutes_after_arrival': 0,
             'train_categories' : 'Commuter,Long-distance'
         }).onSuccess(lambda response, status, data : (
-            filtered := [(self.parse(train)) for train in response.json()],
+            #filtered := [(self.parse(train)) for train in response.json()],
+            
+            filtered := self.parse(response.json()),
             self.publish(filtered)
         ))

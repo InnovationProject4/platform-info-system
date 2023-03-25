@@ -121,7 +121,7 @@ class Manager:
         
         for topic, trains in schedules.items():
             
-            responseData = []
+            responseData = {}
             
             for train_id, schedule in trains.items():
 
@@ -159,7 +159,9 @@ class Manager:
                 '''
                 t = train_info.copy()
                 t["timetable"] = schedule
-                responseData.append(t)
+                
+                responseData[train_id].append(t)
+                
                 
             self.conn.publish(topic, json.dumps(responseData))
             
@@ -185,7 +187,7 @@ class Manager:
                     train_id = f'{train_type}'
                     
                 else:
-                    train_id = f'{train.get("trainNumber")} - {train.get("trainType", "?")}'
+                    train_id = f'{train.get("trainType", "?")}{train.get("trainNumber")}'
                     
                 
                 

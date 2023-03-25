@@ -121,7 +121,7 @@ class Manager:
         
         for topic, trains in schedules.items():
             
-            responseData = {}
+            responseData = defaultdict(list)
             
             for train_id, schedule in trains.items():
 

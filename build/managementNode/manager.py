@@ -161,6 +161,7 @@ class Manager:
             
 
        #TODO: Check P & I trains for double arrival/departure at same station
+       #TODO: Check P & I trains for double arrival/departure at same station
     @staticmethod
     def parse(response):
             ''' filter by keys 
@@ -212,7 +213,9 @@ class Manager:
     def aggregation(self):
         self.trains = rata.Simple('live-trains/station/' + STATION).get(payload={
             'minutes_before_departure': 60,
+            'minutes_before_departure': 60,
             'minutes_after_departure': 0,
+            'minutes_before_arrival' : 0,
             'minutes_before_arrival' : 0,
             'minutes_after_arrival': 0,
             'train_categories' : 'Commuter,Long-distance'

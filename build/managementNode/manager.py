@@ -120,10 +120,11 @@ class Manager:
         trains_baseinfo, schedules = rows
         
         for topic, trains in schedules.items():
+            
+            responseData = []
+            
             for train_id, schedule in trains.items():
-                
-               
-                
+
                 train_info = trains_baseinfo[train_id]
                 
                 
@@ -156,11 +157,13 @@ class Manager:
                 print("----------------------------------------------------")
 
                 '''
-                train_info["timetable"] = schedule
-                self.conn.publish(topic, json.dumps(train_info))
+                t = train_info.copy()
+                t["timetable"] = schedule
+                responseData.append(t)
+                
+            self.conn.publish(topic, json.dumps(responseData))
             
 
-       #TODO: Check P & I trains for double arrival/departure at same station
        #TODO: Check P & I trains for double arrival/departure at same station
     @staticmethod
     def parse(response):
@@ -203,9 +206,6 @@ class Manager:
                 
             return trains, rows
                 
-                
-                
-                
                
         
 
@@ -213,9 +213,7 @@ class Manager:
     def aggregation(self):
         self.trains = rata.Simple('live-trains/station/' + STATION).get(payload={
             'minutes_before_departure': 60,
-            'minutes_before_departure': 60,
             'minutes_after_departure': 0,
-            'minutes_before_arrival' : 0,
             'minutes_before_arrival' : 0,
             'minutes_after_arrival': 0,
             'train_categories' : 'Commuter,Long-distance'

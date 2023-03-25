@@ -22,6 +22,8 @@ t_filter = ['trainNumber', 'trainType', 'trainCategory', 'commuterLineID']
 # select the desired keys from  the 'timeTableRows' list
 tt_filter = ['type', 'cancelled', 'scheduledTime', 'differenceInMinutes', 'liveEstimateTime', 'commercialTrack', 'cause']
 
+list_of_stations = station_names.get_station_names()
+
 class Manager:
     def __init__(self):
         self.conn = Connection(ADDR, PORT)
@@ -159,6 +161,7 @@ class Manager:
                 self.conn.publish(topic, json.dumps(train_info))
             
 
+       #TODO: Check P & I trains for double arrival/departure at same station
     @staticmethod
     def parse(response):
             ''' filter by keys 
@@ -209,8 +212,9 @@ class Manager:
 
     def aggregation(self):
         self.trains = rata.Simple('live-trains/station/' + STATION).get(payload={
+            'minutes_before_departure': 60,
             'minutes_after_departure': 0,
-            'minutes_before_arrival' : 60,
+            'minutes_before_arrival' : 0,
             'minutes_after_arrival': 0,
             'train_categories' : 'Commuter,Long-distance'
         }).onSuccess(lambda response, status, data : (

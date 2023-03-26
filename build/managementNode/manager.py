@@ -160,7 +160,7 @@ class Manager:
                 
             self.conn.publish(topic, json.dumps({
                     "stationFullname": self.get_full_stationname(STATION),
-                    "schedule": responseData
+                    "schedule": [responseData]
                 }))
             
 

@@ -6,6 +6,7 @@ from utils.database.sqlite import PersistentConnection
 import utils.database.model.display as dao
 import configparser
 from collections import defaultdict
+from managementNode import announcement_manager
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -34,12 +35,23 @@ class Manager:
     def on_connect(self, client, userdata, flags, rc):
         self.conn.on_connect(client, userdata, flags, rc)
 
-        self.conn.subscribe("management", lambda client, userdata, message : (
-            payload := json.loads(message.payload.decode('utf-8')),
-            print("A device handshake from ", payload['event']),
-            self.register_display(payload) if payload['event'] == 'startup' else None
-
-        ))
+        self.conn.subscribe_multiple([
+            
+            ("management", lambda client, userdata, message : (
+                payload := json.loads(message.payload.decode('utf-8')),
+                print("A device handshake from ", payload['event']),
+                self.register_display(payload) if payload['event'] == 'startup' else None
+            )),
+            
+            
+            ("management/+/update", lambda client, userdata, messages: (
+                announcement_manager.publishAnnouncements(self.conn)
+            ))
+            
+        ])
+        
+        
+       
 
         ''' I am awake, let's do a rollcall '''
         self.conn.publish("management", json.dumps({
@@ -105,6 +117,7 @@ class Manager:
         for topic, trains in schedules.items():
             
             responseData = defaultdict(list)
+            responseData["stationFullname"] = self.get_full_stationname(STATION)
             
             for train_id, schedule in trains.items():
 
@@ -142,6 +155,7 @@ class Manager:
                 t = train_info.copy()
                 t["timetable"] = schedule
                 responseData[train_id].append(t)
+               
                 
                 
             self.conn.publish(topic, json.dumps(responseData))
@@ -178,7 +192,6 @@ class Manager:
                 #train_id = f'{train.get("trainNumber")}-{train_type}'
                 transport_type = train.get('trainCategory')
                 
-                train["stationFullName"] = self.get_full_stationname(STATION)
                 trains[train_id] = train
                 
                 for timing in schedule:

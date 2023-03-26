@@ -68,17 +68,21 @@ You will need to install the requirements.txt files:
 pip3 install -r requirements.txt  
 ```  
   
-Edit the config.ini file if you are not running the build locally  
+Edit the config.ini file to change the ip and port of the mqtt broker.
+Also specify what station you want the server to aggregate.
 ```sh  
 [mqtt-broker]  
 ip = localhost  
 port = 1883  
+
+[aggregation]
+target_station=PSL
 ```  
 ### Server  
   
 The server can be executed with the command:  
 ```sh  
-python3 server.py -s <station_short_code>  
+python3 server.py 
 ```  
 ### Displays  
   

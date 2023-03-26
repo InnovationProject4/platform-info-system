@@ -75,8 +75,10 @@ def printWarningOnDisplay(msg):
 # sorts the list by scheduled time and "next_ten_trains"
 def format_train_data(trains, reactive_trains):
     # sorts the train data
+    global reactive_display_name
+    # reactive_display_name.value = trains[0]['stationFullname']
     new_trains = []
-    for train in trains:
+    for train in trains[0]['schedule']:
         for train_id, train_data in train.items():
             for timetable in train_data:
                 for timetable_entry in timetable["timetable"]:
@@ -93,7 +95,6 @@ def format_train_data(trains, reactive_trains):
 
     sorted_trains = sorted(new_trains, key=lambda x: x[list(x.keys())[0]][0]['timetable'][0]['scheduledTime'])
     next_ten_trains = sorted_trains[:10]
-    print(next_ten_trains)
 
     # final formatting for displays
     formatted = []
@@ -141,17 +142,17 @@ def message_handler(stop_event):
         if len(message_list) != 0:
             messages = message_list
             message_list = []
-            try:
-                format_train_data(messages, reactive_train_data)
-            except:
-                print("Error formatting train data")
+            # try:
+            format_train_data(messages, reactive_train_data)
+            # except:
+            #     print("Error formatting train data")
         if len(message_list2) != 0:
             messages = message_list2
             message_list2 = []
-            try:
-                format_train_data(messages, reactive_train_data2)
-            except:
-                print("Error formatting train data")
+            # try:
+            format_train_data(messages, reactive_train_data2)
+            # except:
+            #     print("Error formatting train data")
 
 
 stop_event = threading.Event()

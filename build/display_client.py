@@ -33,7 +33,7 @@ def main():
     elif args.view == "tableview" and None not in [args.s, args.transit, args.transport] and args.p is None:
         display = types.Central(args.s, args.transit, args.transport)
         # Setting column names and table row count
-        timetable_view.App(["Time", "Notice", "Platform", "Train", "Destination"], 10)
+        timetable_view.App(["Time", "Notice", "Train", "Platform", "Destination"], 10)
         mqtt.createConnection(display, args.view)
 
     elif args.view == "tableview" and None not in [args.s, args.p, args.transit, args.transport]:

@@ -1,6 +1,5 @@
 import threading
 import time
-from collections import defaultdict
 
 from tabulate import tabulate
 from datetime import datetime
@@ -97,12 +96,14 @@ def printTablePlatformDisplay(msg):
 
 # list to store received messages
 message_list = []
+message_list2 = []
 
 # function to handle received messages
 #Loops through the trains to separate each train with only one timetable into new_trains list
 #sorts the list by scheduled time and "next_ten_trains"
 
-def format_train_data(trains):
+def format_train_data(trains, reactive_trains):
+    # sorts the train data
     new_trains = []
     for train in trains:
         for train_id, train_data in train.items():
@@ -121,7 +122,30 @@ def format_train_data(trains):
 
     sorted_trains = sorted(new_trains, key=lambda x: x[list(x.keys())[0]][0]['timetable'][0]['scheduledTime'])
     next_ten_trains = sorted_trains[:10]
-    print("Handling messages AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:", json.dumps(next_ten_trains))
+    print("Handled messages \n", json.dumps(next_ten_trains), "\n\n")
+
+    # final formatting for displays
+    formatted = []
+    for train in next_ten_trains:
+        temp = []
+        for train_data in train.values():
+            temp.insert(3, train_data[0]['commuterLineID'])
+            temp.insert(4, "puuttuu")
+            for timetable in train_data[0]["timetable"]:
+                if timetable["liveEstimateTime"] is None:
+                    temp.insert(0, convertUTCtoEET(timetable["scheduledTime"]))
+                else:
+                    temp.insert(0, convertUTCtoEET(timetable["liveEstimateTime"]))
+                temp.insert(2, timetable['commercialTrack'])
+                if timetable["cancelled"] is False and timetable['differenceInMinutes'] == 0 or timetable['differenceInMinutes'] is None:
+                    temp.insert(1, "")
+                elif timetable["cancelled"] is True:
+                    temp.insert(1, "Cancelled")
+                else:
+                    temp.insert(1, "~ " + str(timetable['differenceInMinutes']) + "min")
+
+        formatted.append(temp)
+    reactive_trains.value = formatted
 
     #return sorted_data[:amount]
 
@@ -131,11 +155,11 @@ def format_train_data(trains):
 
 
 # start a thread to handle received messages
-def message_handler():
+def message_handler(stop_event):
 
-    global message_list
+    global message_list, message_list2
 
-    while True:
+    while not stop_event.is_set():
         # wait for messages to arrive
         time.sleep(1)
         # check if any new messages have arrived in the last second
@@ -146,24 +170,41 @@ def message_handler():
         if len(message_list) != 0:
             messages = message_list
             message_list = []
-            format_train_data(messages)
+            format_train_data(messages, reactive_train_data)
+        if len(message_list2) != 0:
+            messages = message_list2
+            message_list2 = []
+            format_train_data(messages, reactive_train_data2)
 
 
 
-thread = threading.Thread(target=message_handler)
+stop_event = threading.Event()
+thread = threading.Thread(target=message_handler, args=(stop_event,))
 thread.start()
 
-def addTrains(msg):
-   # print("AAAAAAAAAAAAAAAADDDDDDDDDDDDD TTTTTTTTTTTTTRRRRRRRRRRRRAAAAAAAAAAAAAAIIIIIIIINNNNNS", msg)
-    global message_list
+def stop_threads():
+    # Stop all running threads
+    global stop_event
+    global thread
+
+    stop_event.set()
+    thread.join()
+
+
+def addTrains(msg, display_name):
+    global message_list, reactive_display_name
     message_list.append(json.loads(msg))
+    reactive_display_name.value = display_name
+
+
+def addTrains2(msg):
+    global message_list2
+    message_list2.append(json.loads(msg))
 
 
    #####################################################################################################
    #####################################################################################################
    #####################################################################################################
-
-
 
 
 def printTableCentralDisplay(msg):

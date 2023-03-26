@@ -13,36 +13,37 @@ class Display(ABC):
 
 class Central(Display):
 
-    def __init__(self, station):
+    def __init__(self, station, transit, transport):
         self.station = station
+        self.transit = transit
+        self.transport = transport
 
     def handleSubscriptions(self):
         return [
-            (f"station/{self.station}/main", lambda client, userdata, message: (
-                printer.printTableCentralDisplay(message.payload.decode(), self.staton)
+            (f"station/{self.station}/+/{self.transit}/{self.transport}", lambda client, userdata, message: (
+                printer.addTrains(message.payload.decode(), f"{self.station} {self.transit}")
             )),
             (f"announcement/alert/{self.station}", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())
             )),
             (f"announcement/info/{self.station}", lambda client, userdata, message: (
                 printer.printAnnouncementsOnDisplay(message.payload.decode())
-            )),
+            ))
         ]
 
 
 class Platform(Display):
 
-    def __init__(self, station, platform_number):
+    def __init__(self, station, platform_number, transit, transport):
         self.platform_number = platform_number
         self.station = station
+        self.transit = transit
+        self.transport = transport
 
     def handleSubscriptions(self):
         return [
-
-            #(f"station/{self.station}/{self.platform_number}/DEPARTURE/#", lambda client, userdata, message: (
-            (f"station/{self.station}/+/DEPARTURE/#", lambda client, userdata, message: (
-                #printer.printTablePlatformDisplay(message.payload.decode(), self.platform_number)
-                printer.addTrains(message.payload.decode())
+            (f"station/{self.station}/{self.platform_number}/{self.transit}/{self.transport}", lambda client, userdata, message: (
+                printer.addTrains(message.payload.decode(), f"{self.platform_number} {self.transit}")
             )),
             (f"announcement/alert/{self.station}/{self.platform_number}", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())
@@ -53,24 +54,26 @@ class Platform(Display):
             )),
             (f"station/{self.station}/{self.platform_number}/passing", lambda client, userdata, message: (
                 printer.printPassingTrainOnDisplay(message.payload.decode())
-            )),
+            ))
         ]
 
 
 class DualPlatform(Display):
 
-    def __init__(self, station, platform_number1, platform_number2):
+    def __init__(self, station, platform_number1, platform_number2, transit, transport):
         self.platform_number1 = platform_number1
         self.platform_number2 = platform_number2
         self.station = station
+        self.transit = transit
+        self.transport = transport
 
     def handleSubscriptions(self):
         return [
-            (f"station/{self.station}/{self.platform_number1}", lambda client, userdata, message: (
-                printer.printLeftDisplay(message.payload.decode())
+            (f"station/{self.station}/{self.platform_number1}/{self.transit}/{self.transport}", lambda client, userdata, message: (
+                printer.addTrains(message.payload.decode(), "")
             )),
-            (f"station/{self.station}/{self.platform_number2}", lambda client, userdata, message: (
-                printer.printRightDisplay(message.payload.decode())
+            (f"station/{self.station}/{self.platform_number2}/{self.transit}/{self.transport}", lambda client, userdata, message: (
+                printer.addTrains2(message.payload.decode())
             )),
             (f"announcement/alert/{self.station}", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())

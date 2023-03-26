@@ -18,6 +18,7 @@ class App(threading.Thread):
 
     def onClose(self):
         mqtt.onDisconnect()
+        dp.stop_threads()
         self.callback()
 
     def run(self):
@@ -51,11 +52,11 @@ class App(threading.Thread):
 
         arrive_label = Label(main_frame, text="", fg='white', anchor='e', justify=RIGHT, bg='#061f36', font=('Calibri Light', 15))
         arrive_label.grid(row=0, column=0, sticky="SEW")
-        dp.reactive_train_data.watch(lambda: updateLabels(dp.reactive_train_data.value[0][0], arrive_label))
+        dp.reactive_train_data.watch(lambda: updateLabels(f"{dp.reactive_train_data.value[0][0]} {dp.reactive_train_data.value[0][1]}", arrive_label))
 
         destination_label = Label(main_frame, text="", anchor='e', justify=RIGHT, fg='white', bg='#061f36', font=('Calibri Light', 30))
         destination_label.grid(row=1, column=0, sticky="NSEW")
-        dp.reactive_train_data.watch(lambda: updateLabels(dp.reactive_train_data.value[0][3], destination_label))
+        dp.reactive_train_data.watch(lambda: updateLabels(dp.reactive_train_data.value[0][4], destination_label))
 
         train_label = Label(main_frame, text="", anchor='e', justify=RIGHT, fg='white', bg='#061f36', font=('Calibri Light', 35))
         train_label.grid(row=0, column=2, sticky="NSEW", padx=(0, 100))

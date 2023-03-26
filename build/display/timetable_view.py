@@ -20,6 +20,7 @@ class App(threading.Thread):
 
     def onClose(self):
         mqtt.onDisconnect()
+        dp.stop_threads()
         self.callback()
 
     def run(self):
@@ -103,7 +104,10 @@ class App(threading.Thread):
             for label in tlabels:
                 try:
                     label['text'] = reactive.value[train][info]
-                    info += 1
+                    if len(self.column_labels) == 4 and info == 1:
+                        info += 2
+                    else:
+                        info += 1
                     if info == len(reactive.value[train]):
                         info = 0
                         train += 1

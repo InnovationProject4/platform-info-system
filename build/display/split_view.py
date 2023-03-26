@@ -18,6 +18,7 @@ class App(threading.Thread):
 
     def onClose(self):
         mqtt.onDisconnect()
+        dp.stop_threads()
         self.callback()
 
     def run(self):

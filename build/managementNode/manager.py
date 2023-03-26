@@ -117,7 +117,6 @@ class Manager:
         for topic, trains in schedules.items():
             
             responseData = defaultdict(list)
-            responseData["stationFullname"] = self.get_full_stationname(STATION)
             
             for train_id, schedule in trains.items():
 
@@ -155,10 +154,14 @@ class Manager:
                 t = train_info.copy()
                 t["timetable"] = schedule
                 responseData[train_id].append(t)
+
                
                 
                 
-            self.conn.publish(topic, json.dumps(responseData))
+            self.conn.publish(topic, json.dumps({
+                    "stationFullname": self.get_full_stationname(STATION),
+                    "schedule": responseData
+                }))
             
 
 

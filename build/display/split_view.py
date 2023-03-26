@@ -24,16 +24,16 @@ class App(threading.Thread):
     def run(self):
         self.root = Tk()
         self.root.protocol("WM_DELETE_WINDOW", self.onClose)
-        self.root['bg'] = '#0a4a70'
+        self.root['bg'] = '#031626'
         self.root.geometry("640x360")
         # self.root.attributes('-fullscreen', True)
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
         Grid.rowconfigure(self.root, 1, weight=7)
 
-        top_frame = Frame(self.root, bg='#0a4a70')
-        main_frame = Frame(self.root, bg='#2788c2')
-        warning_frame = Frame(self.root, bg='#0a4a70')
+        top_frame = Frame(self.root, bg='#031626')
+        main_frame = Frame(self.root, bg='#061f36')
+        warning_frame = Frame(self.root, bg='#031626')
 
         Grid.columnconfigure(top_frame, 0, weight=1)
         Grid.columnconfigure(top_frame, 1, weight=1)
@@ -43,24 +43,24 @@ class App(threading.Thread):
         Grid.columnconfigure(main_frame, 2, weight=25)
         Grid.rowconfigure(main_frame, 0, weight=1)
 
-        display_name_label = Label(top_frame, text=dp.reactive_display_name.value, fg='white', bg='#0a4a70', font=('Calibri Light', 25))
+        display_name_label = Label(top_frame, text=dp.reactive_display_name.value, fg='white', bg='#031626', font=('Calibri Light', 25))
         display_name_label.grid(row=0, column=0, sticky="W", padx=(20, 0))
         dp.reactive_display_name.watch(lambda: updateLabels(dp.reactive_display_name, display_name_label))
 
-        time_label = Label(top_frame, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 15))
+        time_label = Label(top_frame, text="", fg='white', bg='#031626', font=('Calibri Light', 15))
         time_label.grid(row=0, column=1, sticky="E", padx=(0, 20))
 
-        announcement_label = Label(self.root, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 15))
+        announcement_label = Label(self.root, text="", fg='white', bg='#031626', font=('Calibri Light', 15))
         announcement_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
         dp.reactive_announcements.watch(lambda: updateNotification())
 
-        warning_label = Label(warning_frame, text="", fg='red', bg='#0a4a70', font=('Calibri Light', 15))
+        warning_label = Label(warning_frame, text="", fg='red', bg='#031626', font=('Calibri Light', 15))
         warning_label.place(relx=0.5, rely=0.5, anchor=CENTER)
         dp.reactive_warnings.watch(lambda: updateNotification())
 
-        leftframe = Frame(main_frame, bg='#36a8eb')
+        leftframe = Frame(main_frame, bg='#082743')
         leftframe.grid(row=0, column=0, sticky="NSEW")
-        rightframe = Frame(main_frame, bg='#36a8eb')
+        rightframe = Frame(main_frame, bg='#082743')
         rightframe.grid(row=0, column=2, sticky="NSEW")
 
         left_labels = gui_helper.configureDualPlatformGrid(leftframe, Grid, gui_helper.fillLeftSide)

@@ -1,14 +1,12 @@
 import threading
 import time
-
-from tabulate import tabulate
 from datetime import datetime
 from utils.Event import Reactive
 import json
 import pytz
-import os
 
-# Variables storing information for GUI
+# Reactive objects storing information for GUI
+# which update the GUI when the value changes
 reactive_train_data = Reactive([])
 reactive_train_data2 = Reactive([])
 reactive_display_name = Reactive('')
@@ -16,6 +14,10 @@ reactive_warnings = Reactive([])
 reactive_announcements = Reactive([])
 reactive_passing = Reactive(False)
 passing_train_time = ''
+
+# list to store received messages
+message_list = []
+message_list2 = []
 
 
 def convertUTCtoEET(time):
@@ -68,40 +70,9 @@ def printWarningOnDisplay(msg):
     print(f"\033[91m{parsed} \033[00m")
 
 
-def printTablePlatformDisplay(msg):
-    data = json.loads(msg)
-    global reactive_train_data
-    global reactive_display_name
-    reactive_display_name.value = data['platform']
-    temp_train_data = []
-
-    for train in data['trains']:
-        appendToTrainData(train, ['commuterID', 'destination'], temp_train_data)
-    # using temp array so Reactive._notify doesnt trigger on every append
-    reactive_train_data.value = temp_train_data
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print(f'-----------------{data["platform"]}-------------------')
-    print(tabulate(reactive_train_data.value, headers=["Time", "Notice", "Train", "Destination"]))
-
-
-
-
-
-
-
-#TODO: Formatointi vanhaan muotoon & Destination = "Kovakoodattu stringi"
-#####################################################################################################
-#####################################################################################################
-#####################################################################################################
-
-# list to store received messages
-message_list = []
-message_list2 = []
-
 # function to handle received messages
-#Loops through the trains to separate each train with only one timetable into new_trains list
-#sorts the list by scheduled time and "next_ten_trains"
-
+# Loops through the trains to separate each train with only one timetable into new_trains list
+# sorts the list by scheduled time and "next_ten_trains"
 def format_train_data(trains, reactive_trains):
     # sorts the train data
     new_trains = []
@@ -122,41 +93,41 @@ def format_train_data(trains, reactive_trains):
 
     sorted_trains = sorted(new_trains, key=lambda x: x[list(x.keys())[0]][0]['timetable'][0]['scheduledTime'])
     next_ten_trains = sorted_trains[:10]
-    print("Handled messages \n", json.dumps(next_ten_trains), "\n\n")
+    print(next_ten_trains)
 
     # final formatting for displays
     formatted = []
     for train in next_ten_trains:
         temp = []
         for train_data in train.values():
-            temp.insert(3, train_data[0]['commuterLineID'])
-            temp.insert(4, "puuttuu")
+            # checks what the displayed train name should be
+            if train_data[0]['trainCategory'] == "Commuter":
+                temp.insert(3, train_data[0]['commuterLineID'])
+            else:
+                temp.insert(3, f"{train_data[0]['trainType']}{train_data[0]['trainNumber']}")
+
             for timetable in train_data[0]["timetable"]:
+                temp.insert(4, timetable["destination"])
                 if timetable["liveEstimateTime"] is None:
                     temp.insert(0, convertUTCtoEET(timetable["scheduledTime"]))
                 else:
                     temp.insert(0, convertUTCtoEET(timetable["liveEstimateTime"]))
                 temp.insert(2, timetable['commercialTrack'])
+                # Checks the notice of train: Late
                 if timetable["cancelled"] is False and timetable['differenceInMinutes'] == 0 or timetable['differenceInMinutes'] is None:
                     temp.insert(1, "")
                 elif timetable["cancelled"] is True:
                     temp.insert(1, "Cancelled")
                 else:
-                    temp.insert(1, "~ " + str(timetable['differenceInMinutes']) + "min")
+                    temp.insert(1, "~ " + str(abs(timetable['differenceInMinutes'])) + "min")
 
         formatted.append(temp)
+    print(formatted)
     reactive_trains.value = formatted
-
-    #return sorted_data[:amount]
-
-    # do something with the messages, such as process or store them
-
-
 
 
 # start a thread to handle received messages
 def message_handler(stop_event):
-
     global message_list, message_list2
 
     while not stop_event.is_set():
@@ -170,17 +141,23 @@ def message_handler(stop_event):
         if len(message_list) != 0:
             messages = message_list
             message_list = []
-            format_train_data(messages, reactive_train_data)
+            try:
+                format_train_data(messages, reactive_train_data)
+            except:
+                print("Error formatting train data")
         if len(message_list2) != 0:
             messages = message_list2
             message_list2 = []
-            format_train_data(messages, reactive_train_data2)
-
+            try:
+                format_train_data(messages, reactive_train_data2)
+            except:
+                print("Error formatting train data")
 
 
 stop_event = threading.Event()
 thread = threading.Thread(target=message_handler, args=(stop_event,))
 thread.start()
+
 
 def stop_threads():
     # Stop all running threads
@@ -188,7 +165,7 @@ def stop_threads():
     global thread
 
     stop_event.set()
-    thread.join()
+    thread.join(timeout=0.1)
 
 
 def addTrains(msg, display_name):
@@ -200,72 +177,3 @@ def addTrains(msg, display_name):
 def addTrains2(msg):
     global message_list2
     message_list2.append(json.loads(msg))
-
-
-   #####################################################################################################
-   #####################################################################################################
-   #####################################################################################################
-
-
-def printTableCentralDisplay(msg):
-    data = json.loads(msg)
-    global reactive_train_data
-    global reactive_display_name
-    reactive_display_name.value = data["station"]
-    temp_train_data = []
-
-    for train in data['trains']:
-        appendToTrainData(train, ['platform', 'commuterID', 'destination'], temp_train_data)
-    # using temp array so Reactive._notify doesnt trigger on every append
-    reactive_train_data.value = temp_train_data
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print(f'--------------{data["station"]}----------------')
-    print(tabulate(reactive_train_data.value, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
-
-
-def printLeftDisplay(msg):
-    data = json.loads(msg)
-    global reactive_train_data
-    reactive_train_data.value = printDualPlatformDisplay(data)
-    print(f'--------------------Left-{data["platform"]}-----------------------')
-    print(tabulate(reactive_train_data.value, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
-
-
-def printRightDisplay(msg):
-    data = json.loads(msg)
-    global reactive_train_data2
-    reactive_train_data2.value = printDualPlatformDisplay(data)
-    print(f'--------------------Right-{data["platform"]}-----------------------')
-    print(tabulate(reactive_train_data2.value, headers=["Time", "Notice", "Platform", "Train", "Destination"]))
-
-
-def printDualPlatformDisplay(t_data):
-    train = t_data['trains'][0]
-    temp = []
-    appendToTrainData(train, ['platform', 'commuterID', 'destination'], temp)
-    return temp
-
-
-def appendToTrainData(train, variables, formatted):
-    if train['time'] == train['actualTime'] or train['actualTime'] == '':
-        if train['notice'] == '':
-            temp = [convertUTCtoEET(train['time']), train['notice']]
-            for variable in variables:
-                temp.extend([train[variable]])
-            formatted.append(temp)
-        else:
-            temp = [convertUTCtoEET(train['time']), '~ ' + train['notice']]
-            for variable in variables:
-                temp.extend([train[variable]])
-            formatted.append(temp)
-    else:
-        if train['notice'] == '':
-            temp = [convertUTCtoEET(train['actualTime']), train['notice']]
-            for variable in variables:
-                temp.extend([train[variable]])
-            formatted.append(temp)
-        else:
-            temp = [convertUTCtoEET(train['actualTime']), '~ ' + train['notice']]
-            for variable in variables:
-                temp.extend([train[variable]])
-            formatted.append(temp)

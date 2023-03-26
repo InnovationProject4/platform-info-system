@@ -63,7 +63,7 @@ class App(threading.Thread):
         dp.reactive_train_data.watch(lambda: updateLabels(dp.reactive_train_data.value[0][2], train_label))
 
         # TODO stop label
-        stops_label = Label(main_frame, text="Test\nTest\nTest\nTest", fg='white', bg='#061f36', anchor='w', justify=LEFT, font=('Calibri Light', 15))
+        stops_label = Label(main_frame, text="", fg='white', bg='#061f36', anchor='w', justify=LEFT, font=('Calibri Light', 15))
         stops_label.grid(row=1, column=2, rowspan=9, sticky="NSEW")
 
         passing_label = Label(self.root, text="Passing train incoming. Stay away from the platform",

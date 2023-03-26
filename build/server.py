@@ -1,6 +1,6 @@
 from managementNode.manager import Manager
-from utils import tkui
-from managementNode.views.brokerstats import MessageStatsView, MessageRateGauge
+# from utils import tkui
+# from managementNode.views.brokerstats import MessageStatsView, MessageRateGauge
 
 import time, argparse, threading, traceback
 

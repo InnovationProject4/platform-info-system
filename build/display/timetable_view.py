@@ -26,42 +26,42 @@ class App(threading.Thread):
     def run(self):
         self.root = Tk()
         self.root.protocol("WM_DELETE_WINDOW", self.onClose)
-        self.root['bg'] = '#0a4a70'
+        self.root['bg'] = '#031626'
         self.root.geometry("640x360")
         # self.root.attributes('-fullscreen', True)
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
         Grid.rowconfigure(self.root, 1, weight=7)
 
-        top_frame = Frame(self.root, bg='#0a4a70')
-        main_frame = Frame(self.root, bg='#0a4a70')
-        warning_frame = Frame(self.root, bg='#0a4a70')
+        top_frame = Frame(self.root, bg='#031626')
+        main_frame = Frame(self.root, bg='#031626')
+        warning_frame = Frame(self.root, bg='#031626')
 
         Grid.columnconfigure(top_frame, 0, weight=1)
         Grid.columnconfigure(top_frame, 1, weight=1)
         Grid.rowconfigure(top_frame, 0, weight=1)
 
-        display_name_label = Label(top_frame, text=dp.reactive_display_name.value, fg='white', bg='#0a4a70', font=('Calibri Light', 25))
+        display_name_label = Label(top_frame, text=dp.reactive_display_name.value, fg='white', bg='#031626', font=('Calibri Light', 25))
         display_name_label.grid(row=0, column=0, sticky="W", padx=(20, 0))
         dp.reactive_display_name.watch(lambda: updateLabels(dp.reactive_display_name, display_name_label))
 
-        time_label = Label(top_frame, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 15))
+        time_label = Label(top_frame, text="", fg='white', bg='#031626', font=('Calibri Light', 15))
         time_label.grid(row=0, column=1, sticky="E", padx=(0, 20))
 
         passing_label = Label(self.root, text="Passing train incoming. Stay away from the platform",
-                              fg='white', bg='#0a4a70', font=('Calibri Light', 15))
-        announcement_label = Label(self.root, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 15))
+                              fg='white', bg='#031626', font=('Calibri Light', 15))
+        announcement_label = Label(self.root, text="", fg='white', bg='#031626', font=('Calibri Light', 15))
         announcement_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
         dp.reactive_announcements.watch(lambda: updateNotification())
         dp.reactive_passing.watch(lambda: updateNotification())
 
-        warning_label = Label(warning_frame, text="", fg='red', bg='#0a4a70', font=('Calibri Light', 15))
+        warning_label = Label(warning_frame, text="", fg='red', bg='#031626', font=('Calibri Light', 15))
         warning_label.place(relx=0.5, rely=0.5, anchor=CENTER)
         dp.reactive_warnings.watch(lambda: updateNotification())
 
         gui_helper.configureGrid(main_frame, Grid, self.rowcount, self.column_labels)
-        labels = gui_helper.fillGrid(main_frame, self.rowcount, self.column_labels)
-        dp.reactive_train_data.watch(lambda: updateTrains(dp.reactive_train_data, labels))
+        train_labels, column_labels = gui_helper.fillGrid(main_frame, self.rowcount, self.column_labels)
+        dp.reactive_train_data.watch(lambda: updateTrains(dp.reactive_train_data, train_labels))
 
         # Method for going through the different Notifications
         def changeNotification():
@@ -104,7 +104,8 @@ class App(threading.Thread):
             for label in tlabels:
                 try:
                     label['text'] = reactive.value[train][info]
-                    if len(self.column_labels) == 4 and info == 1:
+                    if len(self.column_labels) == 4 and info == 2:
+                        print("on neljä")
                         info += 2
                     else:
                         info += 1
@@ -142,7 +143,9 @@ class App(threading.Thread):
             passing_label['font'] = ('Calibri Light', s_notification)
             warning_label['font'] = ('Calibri Light', s_warning)
             time_label['font'] = ('Calibri Light', s_time)
-            for label in labels:
+            for label in column_labels:
+                label['font'] = ('Calibri Light', s_trains)
+            for label in train_labels:
                 label['font'] = ('Calibri Light', s_trains)
 
         top_frame.grid(row=0, column=0, sticky="NSEW")

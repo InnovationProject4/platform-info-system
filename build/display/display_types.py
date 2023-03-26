@@ -20,7 +20,9 @@ class Central(Display):
 
     def handleSubscriptions(self):
         return [
-            (f"station/{self.station}/+/{self.transit}/{self.transport}", lambda client, userdata, message: (
+            # Central displays consists always both from long-distance and commuter trains:
+            # So in this case the # wildcard is used
+            (f"station/{self.station}/+/{self.transit}/#", lambda client, userdata, message: (
                 printer.addTrains(message.payload.decode(), f"{self.station} {self.transit}")
             )),
             (f"announcement/alert/{self.station}", lambda client, userdata, message: (

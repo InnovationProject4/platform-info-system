@@ -1,6 +1,9 @@
+import json
 import sys
 import uuid
 import configparser
+from datetime import datetime
+
 from messaging.telemetry import Connection
 
 config = configparser.ConfigParser()
@@ -28,6 +31,18 @@ def createConnection(new_display, type):
     conn.publish(f"management/{new_uuid}", f"Connected: {new_uuid}\n"
                                            f"- Display: {type}\n"
                                            f"- Station: {new_display.station}")
+
+    conn.publish("management",
+                 json.dumps({
+                     "event": "startup",
+                     "messageTimestamp": datetime.timestamp(datetime.now()),
+                     "message": {
+                         "uuid": new_uuid,
+                         'display_name': f"display-{new_display.station}-{type}",
+                         'display_type': type,
+                         'startTimestamp': datetime.timestamp(datetime.now())
+                     }})
+                 )
 
     # Alert the aggregator to publish data from database
     conn.publish(f"management/{new_uuid}/update", "")

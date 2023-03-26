@@ -13,19 +13,23 @@ def configureGrid(frame, grid, rows, columnlabels):
 
 
 def fillGrid(frame, rows, columnlabels):
+    column_labels = []
     for i, label in enumerate(columnlabels):
-        Label(frame, text=label, font=('Calibri Light', 16), bg="white").grid(row=0, column=i, sticky="NSEW")
+        new_label = Label(frame, text=label, font=('Calibri Light', 16), bg="white")
+        new_label.grid(row=0, column=i, sticky="NSEW")
+        column_labels.append(new_label)
 
-    labels = []
+    train_labels = []
     for r in range(1, rows+1):
         for c in range(len(columnlabels)):
-            color = '#2788c2'
+            color = '#061f36'
             if (r % 2) == 0:
-                color = '#36a8eb'
+                color = '#082743'
             label = Label(frame, text="", bg=color, fg='white', font=('Calibri Light', 15))
             label.grid(row=r, column=c, sticky="NSEW")
-            labels.append(label)
-    return labels
+            train_labels.append(label)
+
+    return train_labels, column_labels
 
 
 def configureDualPlatformGrid(frame, grid, callback):
@@ -34,7 +38,7 @@ def configureDualPlatformGrid(frame, grid, callback):
     grid.columnconfigure(frame, 0, weight=1)
 
     labels = []
-    color = '#36a8eb'
+    color = '#082743'
     for i in range(4):
         l = Label(frame, text="", fg="white", bg=color, font=('Calibri Light', 10))
         labels.append(l)

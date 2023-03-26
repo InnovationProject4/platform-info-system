@@ -20,7 +20,6 @@ db.commit()
 
 
 def publishAnnouncements(conn):
-    print("jotain tapahtuu")
     db2 = sqlite3.connect(repository)
     cursor2 = db2.cursor()
     cursor2.execute('SELECT * FROM topics JOIN announcements ON topics.id = announcements.topic_id')
@@ -29,7 +28,7 @@ def publishAnnouncements(conn):
     # groups the announcements by topic
     for row in result_set:
         topic = row[1]  # topic name from the second column
-        announcement = row[3]  # announcement from the fifth column
+        announcement = row[4]  # announcement from the fifth column
 
         # adds the announcements to the list of messages for this topic
         if topic in topics:

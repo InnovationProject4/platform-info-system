@@ -1,7 +1,7 @@
 import argparse
 import display.display_types as types
 from display import timetable_view, split_view, platform_view, info_view
-from display import mqtt_connection as mqtt
+from display import mqtt_connection as mqtt, display_printer as dp
 
 
 def main():
@@ -18,9 +18,8 @@ def main():
     conversion_dict = {
         "departures": "DEPARTURE",
         "arrivals": "ARRIVAL",
-        "commute": "Long-distance",
-        "intercity": "Commuter",
-        "cargo": "Cargo"
+        "commuter": "Commuter",
+        "long_distance": "Long-distance"
     }
 
     args.transit = conversion_dict.get(args.transit, None)
@@ -56,6 +55,7 @@ def main():
 
     else:
         print("Invalid arguments")
+        dp.stop_threads()
         exit()
 
 

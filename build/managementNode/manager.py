@@ -14,15 +14,13 @@ dbconnection = PersistentConnection()
 
 ADDR = config.get('mqtt-broker', 'ip')
 PORT = config.getint('mqtt-broker', 'port')
-STATION = 'HPL'
+STATION = config.get('aggregation', 'target_station')
 
 # select the desired keys from the top-level list
 t_filter = ['trainNumber', 'trainType', 'trainCategory', 'commuterLineID']
 
 # select the desired keys from  the 'timeTableRows' list
 tt_filter = ['type', 'cancelled', 'scheduledTime', 'differenceInMinutes', 'liveEstimateTime', 'commercialTrack', 'cause']
-
-#list_of_stations = station_names.get_station_names()
 
 class Manager:
     def __init__(self):
@@ -48,21 +46,6 @@ class Manager:
             "event": "rollcall",
             "messageTimeStamp": datetime.timestamp(datetime.now())
         }))
-        '''should receive this 
-
-        self.conn.publish("management", json.dumps({
-            "event": "startup",
-            "messageTimestamp": datetime.timestamp(datetime.now())
-            "message": {
-                "uuid": "ferf3-ergjo4-98thfs7",
-                'display_name': "display#100",
-                'display_type': 'display:platform:1',
-                'startTimestamp': "324242424.3224",
-            },
-            
-        }))
-        '''
-
 
 
     def get_displayinfo(self):
@@ -76,6 +59,18 @@ class Manager:
                 return dinfo
 
             return None
+        
+        
+    # TODO 1110 lines of data, consider using B-tree
+    def get_full_stationname(self, code):
+        if self.station_codes is not None:
+            for station in self.station_codes:
+                if station["stationShortCode"] == code:
+                    return station["stationName"]
+            else:
+                print("No such station code in the dictionary.")
+                return code
+        
 
 
     
@@ -83,6 +78,7 @@ class Manager:
         '''
             when manager receives "startup" event, it attempts to save the information from the display and send back 'ack' event message (Acknowledged)
         '''
+        # TODO REPLACE PERSISTENT MEMORY WITH CONNECTION() AS FILE
         with PersistentConnection() as (conn, cur):
             display = dao.Display(conn=conn)
             display.schema()
@@ -102,19 +98,6 @@ class Manager:
                     "messageTimestamp": datetime.timestamp(datetime.now())
                 }))
                 
-            
-
-
-    def xpublish(self, trains):
-        for train in trains:
-            for shift in train['timeTableRows']:
-                platform_id = shift.get('commercialTrack', '?')
-                transit = shift.get('type')
-                transport_type = train.get('trainCategory')
-            
-                topic = f"station/{STATION}/{platform_id}/{transit}/{transport_type}"
-                self.conn.publish(topic, json.dumps(shift))
-                
                 
     def publish(self, rows):
         trains_baseinfo, schedules = rows
@@ -126,8 +109,7 @@ class Manager:
             for train_id, schedule in trains.items():
 
                 train_info = trains_baseinfo[train_id]
-                
-                
+           
                 '''
                 #print("y",train_info)
                 
@@ -159,35 +141,36 @@ class Manager:
                 '''
                 t = train_info.copy()
                 t["timetable"] = schedule
-                
                 responseData[train_id].append(t)
                 
                 
             self.conn.publish(topic, json.dumps(responseData))
             
 
-       #TODO: Check P & I trains for double arrival/departure at same station
-    @staticmethod
-    def parse(response):
+
+    def parse(self, response):
             ''' filter by keys 
             (trainInfo, trainSchedule) '''
             filtered = (({key: train[key] for key in t_filter},
-                        [{key: row.get(key, None) for key in tt_filter} for row in train['timeTableRows'] if row['stationShortCode'] == STATION] )
+                        [{key: row.get(key, None) for key in tt_filter} |  {'destination': self.get_full_stationname(train['timeTableRows'][-1]['stationShortCode'])} for row in train['timeTableRows'] if row['stationShortCode'] == STATION] )
                         for train in response)
             
             rows = defaultdict(lambda: defaultdict(list))
             trains = dict()
-             #{STATION}/{platform_id}/{transit}/{transport_type}
+            
+            
             for train, schedule in filtered:
+            #{STATION}/{platform_id}/{transit}/{transport_type}
                 
                 train_type = train.get("commuterLineID", None) or train.get("trainType", "?")
                 
-                
+                # TODO REDEFINE UGLY
                 if train.get("commuterLineID", None):
                     train_id = f'{train_type}'
                     
                 else:
                     train_id = f'{train.get("trainType", "?")}{train.get("trainNumber")}'
+                ##
                     
                 
                 
@@ -195,14 +178,14 @@ class Manager:
                 #train_id = f'{train.get("trainNumber")}-{train_type}'
                 transport_type = train.get('trainCategory')
                 
-
+                train["stationFullName"] = self.get_full_stationname(STATION)
                 trains[train_id] = train
                 
                 for timing in schedule:
                     platform_id = timing.get('commercialTrack', '?')
                     transit = timing.get('type')
                     topic = f"station/{STATION}/{platform_id}/{transit}/{transport_type}"
-                
+         
                     rows[topic][train_id].append(timing)
                 
                 
@@ -213,6 +196,10 @@ class Manager:
 
 
     def aggregation(self):
+        self.station_codes = rata.Simple('metadata/stations').get().onSuccess(lambda response, status, data : (
+            response.json()
+        )).send()
+        
         self.trains = rata.Simple('live-trains/station/' + STATION).get(payload={
             'minutes_before_departure': 600,
             'minutes_after_departure': 0,

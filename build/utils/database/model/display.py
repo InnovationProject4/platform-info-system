@@ -27,7 +27,7 @@ class Display:
         CREATE TABLE IF NOT EXISTS display(
         id INTEGER PRIMARY KEY,
         uuid TEXT unique,
-        display_name TEXT,
+        display_name TEXT unique,
         display_type INTEGER,
         status INTEGER,
         last_message_timestamp TIMESTAMP,
@@ -38,7 +38,7 @@ class Display:
     
 
     def insert(self, uuid, display_name, display_type, status, message_timestamp, start_timestamp):
-        self.conn.execute('''INSERT INTO display(uuid, display_name, display_type, status, last_message_timestamp, start_timestamp)  \
+        self.conn.execute('''INSERT OR REPLACE INTO display(uuid, display_name, display_type, status, last_message_timestamp, start_timestamp)  \
         VALUES (:uuid, :display_name, :display_type, :status, :last_message_timestamp, :start_timestamp)''',
         {
             "uuid": uuid,
@@ -54,7 +54,7 @@ class Display:
 
     def fetchall(self):
         cur = self.conn.cursor()
-        cur.execute('''SELECT * FROM display''')
+        cur.execute('''SELECT uuid, display_name, display_type, last_message_timestamp, start_timestamp, status FROM display''')
         return cur.fetchall()
 
     

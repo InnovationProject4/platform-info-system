@@ -45,7 +45,7 @@ class Connection:
         self.client.on_disconnect = self.on_disconnect
         self.topics = set()
         
-        self._event = Reactive(0)
+        self.connectionEventHandler = Reactive(0)
 
     def __del__(self):
         self.disconnect()
@@ -63,14 +63,12 @@ class Connection:
         print("Connection result: {}".format(mqtt.connack_string(rc)))
         if rc != mqtt.CONNACK_ACCEPTED:
             raise IOError("couldn't establish connection to a broker")
-        self._event.value = True
+        self.connectionEventHandler.value = True
         
     def on_connection(self, event):
-        print("OMG")
-        if self.client.is_connected():
-            event()
+        if self.client.is_connected(): event()
         else:
-            self._event.watch(event)
+            self.connectionEventHandler.watch(event)
 
     def on_disconnect(self, client, userdata, rc):
         print("client disconnected")
@@ -90,7 +88,7 @@ class Connection:
                 print("received topic message '" + message.topic "'")
             ))
 
-        """
+        """                                                  # TODO : Subscription overwrites from another object on same topic, when it should not
         if callable(callback):
             self.client.message_callback_add(topics, callback)
 
@@ -120,14 +118,11 @@ class Connection:
             if callable(callback):
                 self.client.message_callback_add(topic, callback)
             else: 
-                print("expected a callable, received: " + str(type(callback)))
+                print("expected a callable, received: " + str(type(callback)))       # TODO : Subscription overwrites from another object on same topic
+            tuples.append((topic, qos))
                 
-            if topic not in self.topics:
-                self.topics.add(topic)
-                tuples.append((topic, qos))
-                
-        if len(tuples) > 0:
-           # print("subscribing mass", topic)
+       
+           
             self.client.subscribe(tuples, qos)
             
         return self

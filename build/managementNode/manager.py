@@ -7,6 +7,7 @@ import utils.database.model.display as dao
 import configparser
 from collections import defaultdict
 from managementNode import announcement_manager
+from utils.Event import observable
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -51,8 +52,6 @@ class Manager:
         ])
         
         
-       
-
         ''' I am awake, let's do a rollcall '''
         self.conn.publish("management", json.dumps({
             "event": "rollcall",
@@ -60,6 +59,7 @@ class Manager:
         }))
 
 
+    @observable
     def get_displayinfo(self):
         ''' Get currently known displays from db '''
         with PersistentConnection() as (conn, cur):
@@ -69,8 +69,10 @@ class Manager:
             dinfo = display.fetchall()
             if dinfo:
                 return dinfo
+            
+            
 
-            return None
+            return dinfo
         
         
     # TODO 1110 lines of data, consider using B-tree
@@ -99,7 +101,7 @@ class Manager:
             args = (info['uuid'], info['display_name'], info['display_type'], dao.CONNECTED , data['messageTimestamp'], info['startTimestamp'])
 
             display.insert(*args)
-
+            
             if cur.rowcount == 0:
                  display.update(*args)
             else:
@@ -154,7 +156,6 @@ class Manager:
                 t = train_info.copy()
                 t["timetable"] = schedule
                 responseData[train_id].append(t)
-
                
                 
                 
@@ -217,9 +218,9 @@ class Manager:
         )).send()
         
         self.trains = rata.Simple('live-trains/station/' + STATION).get(payload={
-            'minutes_before_departure': 600,
+            'minutes_before_departure': 120,
             'minutes_after_departure': 0,
-            'minutes_before_arrival' : 0,
+            'minutes_before_arrival' : 10,
             'minutes_after_arrival': 0,
             'train_categories' : 'Commuter,Long-distance'
         }).onSuccess(lambda response, status, data : (

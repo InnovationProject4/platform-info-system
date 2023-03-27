@@ -508,8 +508,9 @@ class Viewport(tk.Frame):
             #style = ttk.Style()
             self.style.configure("Treeview", font=(None, new_font_size - 1))
             self.style.configure("Treeview.Heading", font=(None, new_font_size, "bold"))
-            
-        tree.bind('<Configure>', __autoscale_treeview)
+        
+        if tree.bind('<Configure>') == '':
+            tree.bind('<Configure>', __autoscale_treeview)
         
 
 ### HELPERS ############################################################################################# 

@@ -17,21 +17,21 @@ __all__ = [
 
 class Event(object):
     def __init__(self):
-        self.callbacks = weakref.WeakSet()
+        self.callbacks = set()
 
     def notify(self, *args, **kwargs):
         [callback(*args, **kwargs) for callback in self.callbacks]
         
 
     def register(self, callback):
-      self.callbacks.add(callback)
-      return callback
+        self.callbacks.add(callback)
+        return callback
 
 
 class EventSet(UserDict):
     def __missing__(self, key):
-      self.data[key] = Event()
-      return self.data[key]
+        self.data[key] = Event()
+        return self.data[key]
     
     def __getattr__(self, key):
         event = self.get(key, None)
@@ -78,8 +78,8 @@ def observable(*attributes):
             event.notify(funct.__name__, result, *args)
             return result
         
-        funct.event = event
-        return funct
+        unboundWrapper.event = event
+        return unboundWrapper
 
     ''' is attribute '''
     def decorator(cls):

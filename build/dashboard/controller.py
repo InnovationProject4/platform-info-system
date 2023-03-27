@@ -211,7 +211,7 @@ def dbGetAll():
     # groups the announcements by topic
     for row in result_set:
         topic = row[1]  # topic name from the second column
-        announcement = row[3]  # announcement from the forth column
+        announcement = row[4]  # announcement from the fifth column
 
         # adds the announcements to the list of messages for this topic
         if topic in topics:

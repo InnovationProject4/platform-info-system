@@ -77,21 +77,23 @@ def format_train_data(trains, reactive_trains):
     # sorts the train data
     global reactive_display_name
     # reactive_display_name.value = trains[0]['stationFullname']
+    # print(trains)
     new_trains = []
-    for train in trains[0]['schedule']:
-        for train_id, train_data in train.items():
-            for timetable in train_data:
-                for timetable_entry in timetable["timetable"]:
-                    new_train = {
-                        train_id: [{
-                            "trainNumber": timetable["trainNumber"],
-                            "trainType": timetable["trainType"],
-                            "trainCategory": timetable["trainCategory"],
-                            "commuterLineID": timetable["commuterLineID"],
-                            "timetable": [timetable_entry]
-                        }]
-                    }
-                    new_trains.append(new_train)
+    for train in trains:
+        for schedule in train['schedule']:
+            for train_id, train_data in schedule.items():
+                for timetable in train_data:
+                    for timetable_entry in timetable["timetable"]:
+                        new_train = {
+                            train_id: [{
+                                "trainNumber": timetable["trainNumber"],
+                                "trainType": timetable["trainType"],
+                                "trainCategory": timetable["trainCategory"],
+                                "commuterLineID": timetable["commuterLineID"],
+                                "timetable": [timetable_entry]
+                            }]
+                        }
+                        new_trains.append(new_train)
 
     sorted_trains = sorted(new_trains, key=lambda x: x[list(x.keys())[0]][0]['timetable'][0]['scheduledTime'])
     next_ten_trains = sorted_trains[:10]
@@ -142,17 +144,17 @@ def message_handler(stop_event):
         if len(message_list) != 0:
             messages = message_list
             message_list = []
-            # try:
-            format_train_data(messages, reactive_train_data)
-            # except:
-            #     print("Error formatting train data")
+            try:
+                format_train_data(messages, reactive_train_data)
+            except Exception as e:
+                print("Error formatting train data: ", e)
         if len(message_list2) != 0:
             messages = message_list2
             message_list2 = []
-            # try:
-            format_train_data(messages, reactive_train_data2)
-            # except:
-            #     print("Error formatting train data")
+            try:
+                format_train_data(messages, reactive_train_data2)
+            except Exception as e:
+                print("Error formatting train data: ", e)
 
 
 stop_event = threading.Event()

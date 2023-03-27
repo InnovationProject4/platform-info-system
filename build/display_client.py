@@ -6,11 +6,11 @@ from display import mqtt_connection as mqtt, display_printer as dp
 
 def main():
     parser = argparse.ArgumentParser(description='sets the correct display')
-    parser.add_argument('-view', type=str, help='enter a display view name (tableview, splitview, platformview)')
+    parser.add_argument('-view', type=str, help='enter a display view name (tableview, splitview, platformview, infoview)')
     parser.add_argument('-s', type=str, help='enter station short code')
     parser.add_argument('-p', type=str, help='enter platform number')
     parser.add_argument('-transit', type=str, help='enter transit type (departures, arrivals)')
-    parser.add_argument('-transport', type=str, help='enter transport type (commute, intercity, cargo)')
+    parser.add_argument('-transport', type=str, help='enter transport type (commuter, intercity)')
     parser.add_argument('-left', type=str, help='enter left display platform number')
     parser.add_argument('-right', type=str, help='enter right display platform number')
     args = parser.parse_args()

@@ -86,8 +86,10 @@ def createAnnouncementManager(left_frame, root):
         update_button.config(state=tk.NORMAL)
         display_find.master.focus()
         display_find.grid_forget()
-        platform = platform_entry.get() if not "" else "+"
-        items = controller.dbGet(f"announcement/{type_box.get()}/{station_entry.get()}/{platform}")
+        if platform_entry.get() == "":
+            items = controller.dbGet(f"announcement/{type_box.get()}/{station_entry.get()}")
+        else:
+            items = controller.dbGet(f"announcement/{type_box.get()}/{station_entry.get()}/{platform_entry.get()}")
         controller.fillRows(table_frame, announcement_canvas_data, items)
 
     # By default the button is shown on top of message entry and add button

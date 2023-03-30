@@ -3,7 +3,6 @@ import sys
 import uuid
 import configparser
 from datetime import datetime
-
 from messaging.telemetry import Connection
 
 config = configparser.ConfigParser()
@@ -15,22 +14,26 @@ port = config.get('mqtt-broker', 'port')
 conn = Connection(ip, int(port))
 new_uuid = str(uuid.uuid4())
 
+last_will_message = json.dumps({
+                     "event": "disconnected",
+                     "messageTimestamp": datetime.timestamp(datetime.now()),
+                     "message": {
+                         "uuid": new_uuid,
+                         'startTimestamp': datetime.timestamp(datetime.now())
+                     }})
+
 
 def createConnection(new_display, type):
-    global display
+    global display, last_will_message
     display = new_display
     # Last will message if connection disconnects without disconnect()
-    conn.set_last_will(f"management/{new_uuid}", f"Disconnected: {new_uuid}", 0)
+    conn.set_last_will("management", last_will_message, 0)
 
     try:
         conn.connect()
     except ConnectionRefusedError:
         print("Connection to the broker failed")
         sys.exit()
-
-    conn.publish(f"management/{new_uuid}", f"Connected: {new_uuid}\n"
-                                           f"- Display: {type}\n"
-                                           f"- Station: {new_display.station}")
 
     conn.publish("management",
                  json.dumps({
@@ -52,5 +55,6 @@ def createConnection(new_display, type):
 
 # Is called when the Tkinter root window is closed
 def onDisconnect():
-    conn.publish(f"management/{new_uuid}", f"Disconnected: {new_uuid}")
+    global last_will_message
+    conn.publish("management", last_will_message)
     conn.disconnect()  # Here last will message is not published

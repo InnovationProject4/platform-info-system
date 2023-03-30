@@ -10,7 +10,7 @@ def main():
     parser.add_argument('-s', type=str, help='enter station short code')
     parser.add_argument('-p', type=str, help='enter platform number')
     parser.add_argument('-transit', type=str, help='enter transit type (departures, arrivals)')
-    parser.add_argument('-transport', type=str, help='enter transport type (commuter, intercity)')
+    parser.add_argument('-transport', type=str, help='enter transport type (commuter, long_distance)')
     parser.add_argument('-left', type=str, help='enter left display platform number')
     parser.add_argument('-right', type=str, help='enter right display platform number')
     args = parser.parse_args()
@@ -22,8 +22,9 @@ def main():
         "long_distance": "Long-distance"
     }
 
-    args.transit = conversion_dict.get(args.transit, None)
-    args.transport = conversion_dict.get(args.transport, None)
+    # Subscribes to all subtopics if argument is left out
+    args.transit = conversion_dict.get(args.transit, "+")
+    args.transport = conversion_dict.get(args.transport, "#")
 
     if args.view == "splitview" and None not in [args.s, args.left, args.right, args.transit, args.transport]:
         display = types.DualPlatform(args.s, args.left, args.right, args.transit, args.transport)

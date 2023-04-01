@@ -101,11 +101,15 @@ class App(threading.Thread):
 
         def updateTrains(reactive, tlabels):
             info, train = 0, 0
-            for label in tlabels:
+            for i, label in enumerate(tlabels):
                 try:
                     label['text'] = reactive.value[train][info]
+                    if info == 0 and reactive.value[train][info+1] != '':
+                        label['fg'] = "red"
+                    else:
+                        label['fg'] = "white"
+
                     if len(self.column_labels) == 4 and info == 2:
-                        print("on neljä")
                         info += 2
                     else:
                         info += 1

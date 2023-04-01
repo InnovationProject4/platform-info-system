@@ -1,4 +1,5 @@
 import configparser
+import json
 import sys
 import sqlite3
 import tkinter as tk
@@ -11,6 +12,7 @@ config.read('config.ini')
 
 repository = config.get('sqlite', 'repository')
 db = sqlite3.connect(repository)
+db.row_factory = sqlite3.Row
 cursor = db.cursor()
 
 new_uuid = str(uuid.uuid4())
@@ -128,9 +130,21 @@ def validateEntries(required_entries):
 
 def connectToDisplays(log):
     conn.subscribe_multiple([
-        ("management/+", lambda client, userdata, message: (
-            insertToLog(log, f"{message.payload.decode()}\n\n")
+        ("management", lambda client, userdata, message: (
+            formatDisplayMessage(message.payload.decode(), log)
         ))])
+
+
+def formatDisplayMessage(msg, log):
+    try:
+        parsed = json.loads(msg)
+        if 'display_name' in parsed['message']:
+            insertToLog(log,
+                        f"{parsed['event']}: {parsed['message']['uuid']}\n- {parsed['message']['display_name']}\n\n")
+        else:
+            insertToLog(log, f"{parsed['event']}: {parsed['message']['uuid']}\n\n")
+    except Exception:
+        print("Key not found in the message")
 
 
 def connectToAggregator(log):
@@ -172,7 +186,6 @@ def dbGet(topic):
     announcement_list = [row[0] for row in announcements]
     if announcement_list is None:
         return
-
     return announcement_list
 
 
@@ -198,6 +211,7 @@ def dbClearAnnouncements():
         cursor.execute("INSERT INTO announcements (topic_id, announcement) VALUES (?, '')",
                        (topic[0],))
     db.commit()
+    conn.publish(f"management/{new_uuid}/update", "")
     createPopup("Success", "Announcements cleared successfully")
 
 
@@ -210,8 +224,8 @@ def dbGetAll():
     topics = {}
     # groups the announcements by topic
     for row in result_set:
-        topic = row[1]  # topic name from the second column
-        announcement = row[4]  # announcement from the fifth column
+        topic = row['topic']
+        announcement = row['announcement']
 
         # adds the announcements to the list of messages for this topic
         if topic in topics:

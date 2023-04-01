@@ -21,14 +21,15 @@ db.commit()
 
 def publishAnnouncements(conn):
     db2 = sqlite3.connect(repository)
+    db2.row_factory = sqlite3.Row
     cursor2 = db2.cursor()
     cursor2.execute('SELECT * FROM topics JOIN announcements ON topics.id = announcements.topic_id')
     result_set = cursor2.fetchall()
     topics = {}
     # groups the announcements by topic
     for row in result_set:
-        topic = row[1]  # topic name from the second column
-        announcement = row[4]  # announcement from the fifth column
+        topic = row['topic']
+        announcement = row['announcement']
 
         # adds the announcements to the list of messages for this topic
         if topic in topics:

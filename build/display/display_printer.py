@@ -1,6 +1,6 @@
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from utils.Event import Reactive
 import json
 import pytz
@@ -15,9 +15,17 @@ reactive_announcements = Reactive([])
 reactive_passing = Reactive(False)
 passing_train_time = ''
 
-# list to store received messages
+# lists to store received messages
 message_list = []
 message_list2 = []
+
+
+topic_info_dict = {
+    "station": "",
+    "platform": "",
+    "transit": "",
+    "transport": ""
+}
 
 
 def convertUTCtoEET(time):
@@ -76,8 +84,7 @@ def printWarningOnDisplay(msg):
 def format_train_data(trains, reactive_trains):
     # sorts the train data
     global reactive_display_name
-    # reactive_display_name.value = trains[0]['stationFullname']
-    # print(trains)
+    topic_info_dict["station"] = trains[0]['stationFullname']
     new_trains = []
     for train in trains:
         for schedule in train['schedule']:
@@ -95,6 +102,7 @@ def format_train_data(trains, reactive_trains):
                         }
                         new_trains.append(new_train)
 
+    # Picks 10 first trains which are sorted by scheduledTime
     sorted_trains = sorted(new_trains, key=lambda x: x[list(x.keys())[0]][0]['timetable'][0]['scheduledTime'])
     next_ten_trains = sorted_trains[:10]
 
@@ -116,16 +124,18 @@ def format_train_data(trains, reactive_trains):
                 else:
                     temp.insert(0, convertUTCtoEET(timetable["liveEstimateTime"]))
                 temp.insert(2, timetable['commercialTrack'])
-                # Checks the notice of train: Late
+                # Checks if train is late or cancelled
                 if timetable["cancelled"] is False and timetable['differenceInMinutes'] == 0 or timetable['differenceInMinutes'] is None:
                     temp.insert(1, "")
                 elif timetable["cancelled"] is True:
                     temp.insert(1, "Cancelled")
                 else:
-                    temp.insert(1, "~ " + str(abs(timetable['differenceInMinutes'])) + "min")
+                    new_time = datetime.strptime(temp[0], '%H:%M') + timedelta(minutes=timetable['differenceInMinutes'])
+                    temp.insert(1, "→ " + new_time.strftime('%H:%M'))
 
         formatted.append(temp)
     print(formatted)
+    configureDisplayName()
     reactive_trains.value = formatted
 
 
@@ -171,12 +181,41 @@ def stop_threads():
     thread.join(timeout=0.1)
 
 
-def addTrains(msg, display_name):
-    global message_list, reactive_display_name
+def addTrains(msg, dict):
+    global message_list, topic_info_dict
+    if dict.get("station") is not None:
+        topic_info_dict["station"] = dict.get("station")
+    if dict.get("platform") is not None:
+        topic_info_dict["platform"] = dict.get("platform")
+    if dict.get("transit") is not None:
+        topic_info_dict["transit"] = dict.get("transit")
+    if dict.get("transport") is not None:
+        topic_info_dict["transport"] = dict.get("transport")
     message_list.append(json.loads(msg))
-    reactive_display_name.value = display_name
 
 
 def addTrains2(msg):
     global message_list2
     message_list2.append(json.loads(msg))
+
+
+def configureDisplayName():
+    global topic_info_dict, reactive_display_name
+    name_dict = {
+        "DEPARTURE": "departing ",
+        "ARRIVAL": "arriving ",
+        "Commuter": "commuter ",
+        "Long-distance": "long distance ",
+        "": ""
+    }
+    print(topic_info_dict)
+    if topic_info_dict["transit"] == "+" or topic_info_dict.get("transit") is None:
+        topic_info_dict["transit"] = ""
+    if topic_info_dict["transport"] == "#" or topic_info_dict.get("transport") is None:
+        topic_info_dict["transport"] = ""
+    print(topic_info_dict)
+    if topic_info_dict["platform"] != "":
+        reactive_display_name.value = "Platform " + topic_info_dict["platform"] + " " + name_dict[topic_info_dict['transit']] + name_dict[topic_info_dict['transport']] + "trains"
+    else:
+        reactive_display_name.value = topic_info_dict["station"] + " " + name_dict[topic_info_dict['transit']] + name_dict[topic_info_dict['transport']] + "trains"
+

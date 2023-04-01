@@ -78,6 +78,10 @@ class DeviceMonitoring(Viewport, ):
     
     def widgets(self):
         
+        label = PluginLabel(self, "hello world")
+        label.pack()
+        
+        
         device_list_frame = tk.Frame(self)
         device_list_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
@@ -127,100 +131,15 @@ class DeviceMonitoring(Viewport, ):
         
 
 
-
-#############################################################
-
-
-#############################################################
-
-class MessageRateGauge(Viewport):
-    '''
-    Monitor message rate per minute
-    '''
-
-    # plugin
-    name = "Message Rate Gauge"
-
-    @staticmethod
-    def default(parent):
-        return MessageRateGauge(parent)
-
-    def __init__(self, parent, width=200, height=200, *args, **kwargs):
-        super().__init__(parent, bg="red", width=width, height=height, *args, **kwargs)
-
-        self.message_rate = Reactive(0)
-        self.last_minute_count = 0
-        self.message_count = 0
-
-        # draw gauge when rate data is changed
-        self.message_rate.watch(self.draw)
-
-        # message rate gauge
-        self.max_rate = 1000
-        self.needle_len = min(width, height) // 2 * 0.8
-        self.needle_width = min(width, height) // 20
-
-        conn.on_connection(self.on_connect)
-        if not conn.is_connected():
-            conn.connect()        
+class PluginLabel(tk.Frame):
+    def __init__(self, parent, plugin_name, plugin_description="KEK"):
+        super().__init__(parent)
         
-
-        self.canvas = tk.Canvas(self, width=width, height=height, bg="white")
-        self.canvas.pack(fill="both", expand=True)
-        self.place(relx=0.5, rely=0.5, anchor="center")
-
-        # start a timer to update message rate every minute
-        self.after(60000, self.update_message_rate)
-
-        self.draw()
-
-    def on_connect(self):
-        conn.subscribe("$SYS/broker/messages/received", lambda client, userdata, message: (
-            self.aggregate(message.payload.decode())
-        ))
-
-    def aggregate(self, payload):
-        if self.message_count == 0:
-            self.message_count = self.last_minute_count = int(payload)
-        else:
-            self.message_count = int(payload)
-
-    def update_message_rate(self):
-        # calculate message rate per minute
-        self.message_rate.value = self.message_count - self.last_minute_count
-        self.last_minute_count = self.message_count
-
-        self.after(60000, self.update_message_rate)
-
-    def draw(self):
-        self.canvas.delete("all")
-
-        # draw gauge background
-        cx = self.canvas.winfo_width() // 2
-        cy = self.canvas.winfo_height() // 2
-        r = min(cx, cy) * 0.9
-        self.canvas.create_oval(cx-r, cy-r, cx+r, cy+r, fill="#ddd", width=2)
-
-        # draw gauge scale
-        for i in range(0, self.max_rate+1, 100):
-            angle = -135 + 270 * i / self.max_rate
-            x1 = cx + (r-2) * math.cos(math.radians(angle))
-            y1 = cy + (r-2) * math.sin(math.radians(angle))
-            x2 = cx + (r-10) * math.cos(math.radians(angle))
-            y2 = cy + (r-10) * math.sin(math.radians(angle))
-            self.canvas.create_line(x1, y1, x2, y2, width=2)
-
-        # draw gauge needle
-        rate = self.message_rate.value
-        angle = -135 + 270 * rate / self.max_rate
-        x1 = cx
-        y1 = cy
-        x2 = cx + self.needle_len * math.cos(math.radians(angle))
-        y2 = cy + self.needle_len * math.sin(math.radians(angle))
-        self.canvas.create_line(x1, y1, x2, y2, width=self.needle_width, fill="red")
-
-        # draw gauge value
-        self.canvas.create_text(cx, cy, text="{:.2f} msg/min".format(rate), font=("Arial", 12, "bold"))
-
-        # schedule next draw
-        self.after(1000, self.draw)
+        self.plugin_name = plugin_name
+        self.plugin_description = plugin_description
+        
+        self.label_name = tk.Label(self, text=self.plugin_name, font=("Arial", 14))
+        self.label_description = tk.Label(self, text=self.plugin_description, font=("Arial", 10), wraplength=200)
+        
+        self.label_name.pack(side=tk.TOP)
+        self.label_description.pack(side=tk.BOTTOM)

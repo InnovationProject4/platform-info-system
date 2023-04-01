@@ -64,6 +64,7 @@ class App(tk.Tk):
         self.geometry(f"{width}x{height}")
         self.minsize(800,600)
         self.protocol("WM_DELETE_WINDOW", self.onClose)
+        self.protocol("WM_SLEEP", self.onClose)
         self.propagate(False)
         self.title(title)
         self.workspace = workspace or self.load_default() or Workspace(self)
@@ -126,7 +127,7 @@ class App(tk.Tk):
                 return JSONDeserializer.deserialize(json.loads(f.read()), self)
 
         except FileNotFoundError:
-            print("error")
+            #print("error")
             pass
             
             
@@ -290,9 +291,12 @@ class Workspace(tk.Canvas):
         self.active_viewgroup = view_group
         self.view_groups.append(view_group)
         
+    def add_viewport(self, view_group):
+        self.add_viewgroup(view_group)
+        
     def remove_viewgroup(self, view_group):
-        view_group.forget(self)
-        self.forget(view_group)
+        view_group.pack_forget()
+        #self.forget(view_group)
         self.view_groups.remove(view_group)
 
 
@@ -358,7 +362,8 @@ class ViewGroup(ttk.PanedWindow):
     def unattach(self):
         self.parent.remove_viewgroup(self)
         self.pack_forget()
-        self.forget(self.parent)
+        #self.forget(self.parent)
+        #self.parent.forget(self)
         self.parent = None
         
     def set_active_viewport(self, viewport):
@@ -400,15 +405,16 @@ class ViewGroup(ttk.PanedWindow):
         self.active_viewport = addable
         addable.parent = self
         removable.unattach()
-            
         
         
-    def split_in_group(self, viewport, orient="vertical"):
+    def xsplit_in_group(self, viewport, orient="vertical"):
         '''
         You can split a viewport into a new group, creating a new view group and moving the current viewport to it.
         '''
+        
+        
         viewport.unattach()
-    
+        
         new_group = ViewGroup(self, orient=orient)
         viewport.parent = new_group
     
@@ -416,13 +422,35 @@ class ViewGroup(ttk.PanedWindow):
         self.add(new_group)
         self.active_viewport = viewport
 
-        new_group.add_viewport(viewport)
         new_group.add_viewport(Viewport(new_group, ""))
+        new_group.add_viewport(viewport)
         
+        
+    def split_in_group(self, viewport, orient="vertical"):
+        '''
+        You can split a viewport into a new group, creating a new view group and moving the current viewport to it.
+        '''
+        #viewport.unattach()
+        new_group = ViewGroup(self.parent, orient=orient)        
+        #new_group.parent.add_viewport(new_group)
+        
+        self.unattach()
+        self.parent = new_group
+        new_group.parent.add_viewport(new_group)
+
+        new_group.add_viewport(self)
+        new_group.add_viewport(Viewport(new_group, ""))
+       
         
     def split_viewport(self):
         temp_viewport = Viewport(self, "default viewport")
         self.add_viewport(temp_viewport)
+        
+    def _on_enter(self, event):
+        self.configure(bg='lightgray')
+
+    def _on_leave(self, event):
+        self.configure(bg='white')
             
             
      
@@ -451,6 +479,9 @@ class Viewport(tk.Frame):
         
         
         self.style = ttk.Style(self)
+        
+        
+        
         
         
     def serialize(self):
@@ -607,36 +638,6 @@ class JSONDeserializer:
             return [JSONDeserializer.deserialize(item, parent) for item in data]
         else:
             return data
-    
-
-class Template(Viewport):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
-        
-        device_list_frame = tk.Frame(self)
-        device_list_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
-        # create device list treeview
-        device_list_treeview = ttk.Treeview(device_list_frame)
-        device_list_treeview.pack(side=tk.LEFT, fill=tk.BOTH, pady=2, expand=True)
-        
-        device_list_treeview['columns'] = ('uuid', 'name', 'last_msg', 'last_conn', 'status')
-        device_list_treeview.column('#0', width=0, stretch=tk.NO)
-        device_list_treeview.column('uuid', width=100, anchor=tk.CENTER)
-        device_list_treeview.column('name',  width=100, anchor=tk.CENTER)
-        device_list_treeview.column('last_msg', width=150, anchor=tk.CENTER)
-        device_list_treeview.column('last_conn', width=150, anchor=tk.CENTER)
-        device_list_treeview.column('status', width=100, anchor=tk.CENTER)
-        
-        #add headings to treeview
-        device_list_treeview.heading('uuid', text='UUID')
-        device_list_treeview.heading('name', text='Device Name')
-        device_list_treeview.heading('last_msg', text='Last message')
-        device_list_treeview.heading('last_conn', text='Last contact')
-        device_list_treeview.heading('status', text='Status')
-        
 
 
 '''

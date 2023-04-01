@@ -1,7 +1,7 @@
 from managementNode.manager import Manager
 from utils import tkui
 # from managementNode.views.brokerstats import MessageStatsView, MessageRateGauge
-from managementNode.views.displaystats import DeviceMonitoring, MessageRateGauge
+from managementNode.views.displaystats import DeviceMonitoring
 
 import time, argparse, threading, traceback
 
@@ -21,8 +21,7 @@ if __name__ == '__main__':
     if args.gui or args.g:
         thread = threading.Thread(target=lambda:(
             app := tkui.App(plugins=[
-                DeviceMonitoring,
-                MessageRateGauge
+                DeviceMonitoring
             ]),
             
             ## Make default viewport

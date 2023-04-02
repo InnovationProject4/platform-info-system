@@ -1,7 +1,12 @@
+import configparser
 from tkinter import *
 import threading
 from display import gui_helper, display_printer as dp, mqtt_connection as mqtt
 from datetime import datetime
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+full_screen = config.get('display', 'fullscreen')
 
 
 class App(threading.Thread):
@@ -26,7 +31,7 @@ class App(threading.Thread):
         self.root.protocol("WM_DELETE_WINDOW", self.onClose)
         self.root['bg'] = '#0a4a70'
         self.root.geometry("640x360")
-        # self.root.attributes('-fullscreen', True)
+        self.root.attributes('-fullscreen', full_screen)
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
         Grid.rowconfigure(self.root, 1, weight=7)

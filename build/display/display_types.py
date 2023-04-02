@@ -20,7 +20,7 @@ class Central(Display):
     def handleSubscriptions(self):
         return [
             (f"station/{self.station}/+/{self.transit}/{self.transport}", lambda client, userdata, message: (
-                printer.addTrains(message.payload.decode(), {"station": self.station, "transit": self.transit, "transport": self.transport})
+                printer.addTrains(message.payload.decode(), {"station": self.station, "transit": self.transit, "transport": self.transport, "view": "tableview"})
             )),
             (f"announcement/alert/{self.station}", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())
@@ -32,17 +32,18 @@ class Central(Display):
 
 class Platform(Display):
 
-    def __init__(self, station, platform_number, transit, transport):
+    def __init__(self, station, platform_number, transit, transport, view):
         self.platform_number = platform_number
         self.station = station
         self.transit = transit
         self.transport = transport
+        self.view = view
 
     def handleSubscriptions(self):
         return [
             (f"station/{self.station}/{self.platform_number}/{self.transit}/{self.transport}",
              lambda client, userdata, message: (
-                 printer.addTrains(message.payload.decode(), {"platform": self.platform_number, "transit": self.transit, "transport": self.transport})
+                 printer.addTrains(message.payload.decode(), {"platform": self.platform_number, "transit": self.transit, "transport": self.transport, "view": self.view})
              )),
             (f"announcement/alert/{self.station}/{self.platform_number}", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())
@@ -68,7 +69,7 @@ class DualPlatform(Display):
         return [
             (f"station/{self.station}/{self.platform_number1}/{self.transit}/{self.transport}",
              lambda client, userdata, message: (
-                 printer.addTrains(message.payload.decode(), {})
+                 printer.addTrains(message.payload.decode(), {"view": "splitview"})
              )),
             (f"station/{self.station}/{self.platform_number2}/{self.transit}/{self.transport}",
              lambda client, userdata, message: (

@@ -1,7 +1,12 @@
+import configparser
 from tkinter import *
 import threading
 from display import gui_helper, display_printer as dp, mqtt_connection as mqtt
 from datetime import datetime
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+full_screen = config.get('display', 'fullscreen')
 
 
 class App(threading.Thread):
@@ -25,7 +30,7 @@ class App(threading.Thread):
         self.root.protocol("WM_DELETE_WINDOW", self.onClose)
         self.root['bg'] = '#0a4a70'
         self.root.geometry("640x360")
-        # self.root.attributes('-fullscreen', True)
+        self.root.attributes('-fullscreen', full_screen)
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
         Grid.rowconfigure(self.root, 1, weight=20)
@@ -51,10 +56,10 @@ class App(threading.Thread):
         dp.reactive_warnings.watch(lambda: updateNotification())
 
         announcements_label = Label(main_frame, text="", fg='white', bg='#031926', justify="left",
-                                    anchor="w", font=('Calibri Light', 15))
+                                    anchor="w", font=('Calibri Light', 15), padx=10)
         announcements_label.grid(row=0, column=0, sticky="wens", padx=10, pady=10, )
         announcements_label.bind('<Configure>',
-                         lambda e: announcements_label.configure(wraplength=self.root.winfo_width()))
+                         lambda e: announcements_label.configure(wraplength=(self.root.winfo_width() - 50)))
         dp.reactive_announcements.watch(lambda: updateNotification())
 
         # Method for going through the different Notifications

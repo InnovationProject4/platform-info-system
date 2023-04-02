@@ -38,13 +38,13 @@ def main():
         mqtt.createConnection(display, args.view)
 
     elif args.view == "tableview" and None not in [args.s, args.p, args.transit, args.transport]:
-        display = types.Platform(args.s, args.p, args.transit, args.transport)
+        display = types.Platform(args.s, args.p, args.transit, args.transport, "tableview")
         # Setting column names and table row count
         timetable_view.App(["Time", "Notice", "Train", "Destination"], 5)
         mqtt.createConnection(display, args.view)
 
     elif args.view == "platformview" and None not in [args.s, args.p, args.transit, args.transport]:
-        display = types.Platform(args.s, args.p, args.transit, args.transport)
+        display = types.Platform(args.s, args.p, args.transit, args.transport, "platformview")
         # Setting column names and table row count
         platform_view.App()
         mqtt.createConnection(display, args.view)

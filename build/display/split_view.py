@@ -1,7 +1,12 @@
+import configparser
 from tkinter import *
 import threading
 from display import gui_helper, display_printer as dp, mqtt_connection as mqtt
 from datetime import datetime
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+full_screen = config.get('display', 'fullscreen')
 
 
 class App(threading.Thread):
@@ -26,7 +31,7 @@ class App(threading.Thread):
         self.root.protocol("WM_DELETE_WINDOW", self.onClose)
         self.root['bg'] = '#031626'
         self.root.geometry("640x360")
-        # self.root.attributes('-fullscreen', True)
+        self.root.attributes('-fullscreen', full_screen)
         Grid.rowconfigure(self.root, 0, weight=1)
         Grid.columnconfigure(self.root, 0, weight=1)
         Grid.rowconfigure(self.root, 1, weight=7)
@@ -135,7 +140,7 @@ class App(threading.Thread):
 
         def resizeFonts(s_name, s_warning, s_time, s_trains, s_notification):
             display_name_label['font'] = ('Calibri Light', s_name)
-            # notification_label['font'] = ('Calibri Light', s_notification)
+            announcement_label['font'] = ('Calibri Light', s_notification)
             warning_label['font'] = ('Calibri Light', s_warning)
             time_label['font'] = ('Calibri Light', s_time)
             for lLabel, rLabel in zip(left_labels, right_labels):

@@ -24,7 +24,8 @@ topic_info_dict = {
     "station": "",
     "platform": "",
     "transit": "",
-    "transport": ""
+    "transport": "",
+    "view": ""
 }
 
 
@@ -191,6 +192,8 @@ def addTrains(msg, dict):
         topic_info_dict["transit"] = dict.get("transit")
     if dict.get("transport") is not None:
         topic_info_dict["transport"] = dict.get("transport")
+    if dict.get("view") is not None:
+        topic_info_dict["view"] = dict.get("view")
     message_list.append(json.loads(msg))
 
 
@@ -208,12 +211,13 @@ def configureDisplayName():
         "Long-distance": "long distance ",
         "": ""
     }
-    print(topic_info_dict)
+    if topic_info_dict["view"] == "platformview":
+        reactive_display_name.value = "Platform " + topic_info_dict["platform"]
+        return
     if topic_info_dict["transit"] == "+" or topic_info_dict.get("transit") is None:
         topic_info_dict["transit"] = ""
     if topic_info_dict["transport"] == "#" or topic_info_dict.get("transport") is None:
         topic_info_dict["transport"] = ""
-    print(topic_info_dict)
     if topic_info_dict["platform"] != "":
         reactive_display_name.value = "Platform " + topic_info_dict["platform"] + " " + name_dict[topic_info_dict['transit']] + name_dict[topic_info_dict['transport']] + "trains"
     else:

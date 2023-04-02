@@ -7,18 +7,18 @@ import time, argparse, threading, traceback
 
 
 parser = argparse.ArgumentParser(description='launch management with dashboard GUI')
-parser.add_argument('--gui', action="store_true", help='enter dashboard mode')
-parser.add_argument('-g', action="store_true", help='enter dashboard mode')
+parser.add_argument('-g', '--gui', action="store_true", help='enter dashboard mode')
+parser.add_argument('-s', '--station', nargs="+", help='add which railway station(s) to listen for using shortStationCode')
 
 args = parser.parse_args()
 
 
-manager = Manager()
+manager = Manager(args.station)
 DeviceMonitoring.attach(manager.get_displayinfo)
 
 if __name__ == '__main__':
     
-    if args.gui or args.g:
+    if args.gui:
         thread = threading.Thread(target=lambda:(
             app := tkui.App(plugins=[
                 DeviceMonitoring

@@ -108,36 +108,36 @@ def format_train_data(trains, reactive_trains):
     next_ten_trains = sorted_trains[:10]
 
     # final formatting for displays
-    formatted = []
+    formatted_train_data = []
     for train in next_ten_trains:
-        temp = []
+        temp_train_data = []
         for train_data in train.values():
             # checks what the displayed train name should be
             if train_data[0]['trainCategory'] == "Commuter":
-                temp.insert(3, train_data[0]['commuterLineID'])
+                temp_train_data.insert(3, train_data[0]['commuterLineID'])
             else:
-                temp.insert(3, f"{train_data[0]['trainType']}{train_data[0]['trainNumber']}")
-
+                temp_train_data.insert(3, f"{train_data[0]['trainType']}{train_data[0]['trainNumber']}")
             for timetable in train_data[0]["timetable"]:
-                temp.insert(4, timetable["destination"])
+                temp_train_data.insert(4, timetable["destination"])
+                temp_train_data.insert(5, timetable["stop_on_stations"])
                 if timetable["liveEstimateTime"] is None:
-                    temp.insert(0, convertUTCtoEET(timetable["scheduledTime"]))
+                    temp_train_data.insert(0, convertUTCtoEET(timetable["scheduledTime"]))
                 else:
-                    temp.insert(0, convertUTCtoEET(timetable["liveEstimateTime"]))
-                temp.insert(2, timetable['commercialTrack'])
+                    temp_train_data.insert(0, convertUTCtoEET(timetable["liveEstimateTime"]))
+                temp_train_data.insert(2, timetable['commercialTrack'])
                 # Checks if train is late or cancelled
                 if timetable["cancelled"] is False and timetable['differenceInMinutes'] == 0 or timetable['differenceInMinutes'] is None:
-                    temp.insert(1, "")
+                    temp_train_data.insert(1, "")
                 elif timetable["cancelled"] is True:
-                    temp.insert(1, "Cancelled")
+                    temp_train_data.insert(1, "Cancelled")
                 else:
-                    new_time = datetime.strptime(temp[0], '%H:%M') + timedelta(minutes=timetable['differenceInMinutes'])
-                    temp.insert(1, "→ " + new_time.strftime('%H:%M'))
+                    new_time = datetime.strptime(temp_train_data[0], '%H:%M') + timedelta(minutes=timetable['differenceInMinutes'])
+                    temp_train_data.insert(1, "→ " + new_time.strftime('%H:%M'))
 
-        formatted.append(temp)
-    print(formatted)
+        formatted_train_data.append(temp_train_data)
+    print(formatted_train_data)
     configureDisplayName()
-    reactive_trains.value = formatted
+    reactive_trains.value = formatted_train_data
 
 
 # start a thread to handle received messages

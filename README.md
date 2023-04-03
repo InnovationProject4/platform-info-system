@@ -3,11 +3,14 @@
 #### ✨Developed at Metropolia's innovation project course for a client at Nokia.✨  
   
  By. Leevi Laaksonen, Samuel Laisaar, Leo Lehtiö, Aleksandr Liski  
-The goal of this project is to develop a train station display board system. The system provides the possibility to handle multiple displays at various different train stations. These could be for example the main display that shows information of all trains departing at the station and displays on individual platforms.  
+The goal of this project is to develop a train station display board system. 
+ The system provides the possibility to handle multiple displays at various different train stations. 
+ These displays can be, for example, a central display that shows information of all trains departing at the station and displays on individual platforms. 
+ The displays can be configured with arguments to specify if, for example, the user wants to display only trains that are arriving and which are also commuter trains 
   
 ## Architecture  
   
-The system retrieves rail traffic information from Digitraffic's services and uses MQTT protocol to distribute the information to different topics which the displays at railway stations subscribe. In the displays implementation the data is then formatted and displayed in a GUI. 
+The management node which is running the aggregator retrieves rail traffic data from Digitraffic's services and uses MQTT protocol to distribute the data to different topics which the displays at railway station's can subscribe. In the display's implementation the data is then formatted and displayed in with a GUI. 
   
 ![data flow diagram](doc/diagrams/data_flow_diagram.png)  
   
@@ -20,7 +23,7 @@ station/<station-short-code>/<platform-number>/<transit>/<transport-type>
 > Transit: **DEPARTURE** or **ARRIVAL** 
 > Transport type: **Commuter** or **Long-distance**
 
-> **Outputs a JSON string:**  {train: [trainNumber, trainType, trainCategory, commuterLineID, timetable: [type, cancelled, scheduledTime, differenceInMinutes, liveEstimateTime, commercialTrack, cause]]}  
+> **Outputs a JSON string:**  [{stationFullName, schedule: [{Train:[trainNumber, trainType, trainCategory, commuterLineID, timetable: [destination, type, cancelled, scheduledTime, differenceInMinutes, liveEstimateTime, commercialTrack, trainStopping, cause, stops_on_stations:[]]]}]}]
 >
 
 Topic for non stopping trains at a platform  
@@ -29,7 +32,7 @@ station/<station-short-code>/<platform-number>/passing
 ```  
 > **Outputs a JSON string:** > {station, trains: [track, scheduledTime]}  
 >   
-Topic for all announcements in a station
+Topic for announcements in a station
 ```sh  
 announcements/<notify-type>/<station-code>/<platform-id>
 ```  
@@ -43,8 +46,55 @@ management/<display-id>/update
 > Subtopic **"update"** not mandatory and is used only for notifying the aggrigator to publish data from a database
 ## Installation  
   
-For running the build on Linux  
+For running the build on Linux:
+
+Before installing anything make sure operating system is up to date.
+
+Check that your python version is at least 3.9
+```sh  
+python3 --version
+```
+Make sure you have git and pip3 installed
+```sh  
+sudo apt-get update
+sudo apt install git 
+sudo apt install python3-pip
+```  
+Clone the repository with git  
+```sh  
+git clone https://github.com/InnovationProject4/platform-info-system  
+```  
+Navigate to the "build" folder
+  ```sh  
+cd platform-info-system/build
+```  
+Install the requirements.txt file with pip3
+```sh  
+pip3 install -r requirements.txt  
+```  
+If your python doesn't come with built-in tkinter package install it
+```sh  
+sudo apt-get install python3-tk
+```  
   
+Edit the config.ini file for MQTT brokers IP and port. Also, if your device is running displays you can choose
+to have it full screen or windowed.
+```sh  
+[mqtt-broker]
+ip = localhost (Type in the brokers IP)
+port = 1883 (Type in the brokers port)
+
+[sqlite]
+repository = database.db
+
+[display]
+fullscreen = 1 (1 = full screen, 0 = windowed)
+
+[validation]
+token = *HIDDEN*
+```  
+### Management Node
+
 Install Eclipse Mosquitto  
 ```sh  
 sudo apt-add-repository ppa:mosquitto-dev/mosquitto-ppa  
@@ -57,33 +107,17 @@ Start the broker
 mosquitto  
 ```  
   
-Clone the repository with git  
+The aggregator can be executed with the command:  
 ```sh  
-git clone https://github.com/InnovationProject4/platform-info-system  
+python3 aggregator.py -s <station_short_code(s)> -g <>
 ```  
-Navigate to the "build" folder.  
-  
-You will need to install the requirements.txt files:  
-```sh  
-pip3 install -r requirements.txt  
-```  
-  
-Edit the config.ini file to change the ip and port of the mqtt broker.
-Also specify what station you want the server to aggregate.
-```sh  
-[mqtt-broker]  
-ip = localhost  
-port = 1883  
+> Aggregation of several stations is possible if you separate them with spaces. \
+> Adding the -g argument opens up a gui for the aggregator.
 
-[aggregation]
-target_station=PSL
-```  
-### Server  
-  
-The server can be executed with the command:  
+The display manager can be executed with the command:  
 ```sh  
-python3 server.py 
-```  
+python3 manager_client.py  
+```
 ### Displays  
   
 The display can be executed with the command:  
@@ -91,14 +125,7 @@ The display can be executed with the command:
 python3 display_client.py -view <display_view> -s <station_short_code> -p <platform> -left <platform> -right <platform> -transit<transit> -transport<transport>  
 ```  
 > Here is an explanation of the different parameters:\  
-> -view "tableview" requires the parameters -s, -transit and -transport but -p is optional\  
-> -view "splitview" requires parameters -s, -left, -right, -transit and -transport\  
-> -view "platformview" requires parameters -s , -p, -transit and -transport\  
-> -view "infoview" requires the parameter -s  
-  
-### Manager  
-  
-The manager can be executed with the command:  
-```sh  
-python3 manager_client.py  
-```
+> -view "tableview" requires the parameter -s but -p, -transit and -transport are optional\  
+> -view "splitview" requires parameters -s, -left, -right but -transit and -transport are optional\  
+> -view "platformview" requires parameters -s and -p but -transit and -transport are optional\  
+> -view "infoview" requires only the parameter -s

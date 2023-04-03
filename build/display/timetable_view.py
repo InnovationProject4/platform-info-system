@@ -118,7 +118,7 @@ class App(threading.Thread):
                         info += 2
                     else:
                         info += 1
-                    if info == len(reactive.value[train]):
+                    if info == 5:
                         info = 0
                         train += 1
                 except IndexError:

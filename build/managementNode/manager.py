@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import messaging.ratatraffic as rata
 from messaging.telemetry import Connection 
 from utils.database.sqlite import PersistentConnection
@@ -129,7 +129,10 @@ class Manager:
                 t["timetable"] = schedule
                 responseData[train_id].append(t)
             
-           
+            print(json.dumps({
+                        "stationFullname": self.get_full_stationname(station),
+                        "schedule": [responseData]
+                    }))
             
                 
             
@@ -163,23 +166,39 @@ class Manager:
             
             for i, row in enumerate(train['timeTableRows']):
                 
-                timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+                #local_offset = timedelta(hours=3)
+                timestamp = (datetime.utcnow()).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
                 
-                if row['stationShortCode'] == station and row['scheduledTime']  >= timestamp :
+                
+                #dt = datetime.strptime(row["scheduledTime"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                
+                #dt += local_offset
+                
+                #row["scheduledTime"] = dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+                
+                
+                
+                
+                
+                #print(row["scheduledTime"])
+                
+                #print("timestamp", timestamp)
+                
+                if row['stationShortCode'] == station and row["scheduledTime"] >= timestamp:
                     for key in tt_filter:
                         filtered[1][key] = row.get(key, None)
                     
                     
                     # TODO this is temporary. It's possible to get flag from row enumerator when LEN is passed, then 
                     
-                    for station in train['timeTableRows']:
-                        if station['stationShortCode'] == "LEN" and station['trainStopping']:
-                            if station["scheduledTime"] >= timestamp:
-                                filtered[1]["destination"] = self.get_full_stationname(station['stationShortCode'])
+                    for timerow in train['timeTableRows']:
+                        if timerow['stationShortCode'] == "LEN" and timerow['trainStopping']:
+                            if timerow["scheduledTime"] >= timestamp:
+                                filtered[1]["destination"] = self.get_full_stationname(timerow['stationShortCode'])
 
                     slice = train['timeTableRows'][i+2:i+7]
                     next_stops = []
-                    [next_stops.append(self.get_full_stationname(station["stationShortCode"])) for station in slice if self.get_full_stationname(station["stationShortCode"]) not in next_stops and station['trainStopping']]
+                    [next_stops.append(self.get_full_stationname(s["stationShortCode"])) for s in slice if self.get_full_stationname(s["stationShortCode"]) not in next_stops]
                     filtered[1]["stop_on_stations"] = next_stops
                     
                     platform_id = row.get('commercialTrack', '?')

@@ -89,7 +89,7 @@ class Manager:
         
 
 
-    
+    @observable
     def register_display(self, data):
         '''
             when manager receives "startup" event, it attempts to save the information from the display and send back 'ack' event message (Acknowledged)
@@ -116,7 +116,7 @@ class Manager:
                 
     
     
-    def pub(self, rows, station):
+    def publish(self, rows, station):
         trains_baseinfo, schedules = rows
         
         for topic, trains in schedules.items():
@@ -130,7 +130,8 @@ class Manager:
                 responseData[train_id].append(t)
             
            
-           
+            
+                
             
             self.conn.publish(topic, json.dumps({
                     "stationFullname": self.get_full_stationname(station),
@@ -139,13 +140,12 @@ class Manager:
       
    
 
-    def filter(self, response, station):
+    def parse(self, response, station):
         ''' filter by keys 
             (trainInfo, trainSchedule) '''
         rows = defaultdict(lambda: defaultdict(list))
         trains = dict()
         
-        current_time = datetime.timestamp(datetime.now())
         
         for train in response: 
             filtered = ({key : train[key] for key in t_filter}, {} | {'destination': self.get_full_stationname(train['timeTableRows'][-1]['stationShortCode'])})
@@ -163,14 +163,24 @@ class Manager:
             
             for i, row in enumerate(train['timeTableRows']):
                 
-                timestamp = datetime.strptime(row["scheduledTime"], '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
+                timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
                 
-                if row['stationShortCode'] == station:
+                if row['stationShortCode'] == station and row['scheduledTime']  >= timestamp :
                     for key in tt_filter:
                         filtered[1][key] = row.get(key, None)
                     
-                    filtered[1]["stop_on_stations"] = [station['stationShortCode'] for station in train['timeTableRows'][i:] if station['trainStopping']][:5]
-                        
+                    
+                    # TODO this is temporary. It's possible to get flag from row enumerator when LEN is passed, then 
+                    
+                    for station in train['timeTableRows']:
+                        if station['stationShortCode'] == "LEN" and station['trainStopping']:
+                            if station["scheduledTime"] >= timestamp:
+                                filtered[1]["destination"] = self.get_full_stationname(station['stationShortCode'])
+
+                    slice = train['timeTableRows'][i+2:i+7]
+                    next_stops = []
+                    [next_stops.append(self.get_full_stationname(station["stationShortCode"])) for station in slice if self.get_full_stationname(station["stationShortCode"]) not in next_stops and station['trainStopping']]
+                    filtered[1]["stop_on_stations"] = next_stops
                     
                     platform_id = row.get('commercialTrack', '?')
                     transit = row.get('type')
@@ -198,6 +208,6 @@ class Manager:
                 'minutes_after_arrival': 0,
                 'train_categories' : 'Commuter,Long-distance'
             }, onSuccess=lambda response, status, data, station=station : (
-                filtered := self.filter(response.json(), station),
-                self.pub(filtered, station)
+                filtered := self.parse(response.json(), station),
+                self.publish(filtered, station)
             ))

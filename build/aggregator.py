@@ -8,7 +8,7 @@ import time, argparse, threading, traceback
 
 parser = argparse.ArgumentParser(description='launch management with dashboard GUI')
 parser.add_argument('-g', '--gui', action="store_true", help='enter dashboard mode')
-parser.add_argument('-s', '--station', nargs="+", help='add which railway station(s) to listen for using shortStationCode')
+parser.add_argument('-s', '--station', nargs="+", required=True, help='add which railway station(s) to listen for using shortStationCode')
 
 args = parser.parse_args()
 

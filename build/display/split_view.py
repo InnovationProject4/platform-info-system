@@ -50,7 +50,7 @@ class App(threading.Thread):
 
         display_name_label = Label(top_frame, text=dp.reactive_display_name.value, fg='white', bg='#031626', font=('Calibri Light', 25))
         display_name_label.grid(row=0, column=0, sticky="W", padx=(20, 0))
-        dp.reactive_display_name.watch(lambda: updateLabels(dp.reactive_display_name, display_name_label))
+        dp.reactive_display_name.watch(lambda: gui_helper.updateLabels(dp.reactive_display_name.value, display_name_label))
 
         time_label = Label(top_frame, text="", fg='white', bg='#031626', font=('Calibri Light', 15))
         time_label.grid(row=0, column=1, sticky="E", padx=(0, 20))
@@ -73,34 +73,19 @@ class App(threading.Thread):
         right_labels = gui_helper.configureDualPlatformGrid(rightframe, Grid, gui_helper.fillRightSide)
         dp.reactive_train_data2.watch(lambda: updateTrains(dp.reactive_train_data2, right_labels))
 
-        # Method for going through the different Notifications
-        def changeNotification():
+        # Method for going through Notifications
+        def handleNotifications():
             # Loops through the announcements
-            if self.announcement_id >= len(dp.reactive_announcements.value):
-                self.announcement_id = 0
-            if len(dp.reactive_announcements.value) > 0:
-                announcement_label.config(text=dp.reactive_announcements.value[self.announcement_id])
-            self.announcement_id += 1
-
+            self.announcement_id = gui_helper.changeNotification(self.announcement_id, announcement_label, dp.reactive_announcements.value)
             # Loops through the warnings
-            if self.warning_id >= len(dp.reactive_warnings.value):
-                self.warning_id = 0
-            if len(dp.reactive_warnings.value) > 0:
-                warning_label.config(text=dp.reactive_warnings.value[self.warning_id])
-            self.warning_id += 1
-
-            self.root.after(10000, changeNotification)
+            self.warning_id = gui_helper.changeNotification(self.warning_id, warning_label, dp.reactive_warnings.value)
+            self.root.after(10000, handleNotifications)
 
         def updateNotification():
             # shows warning alert of there are any
-            if len(dp.reactive_warnings.value) > 0 and dp.reactive_warnings.value[0] != '':
-                warning_frame.tkraise()
-            else:
-                main_frame.tkraise()
+            gui_helper.showWarning(main_frame, warning_frame, dp.reactive_warnings.value)
 
-        def updateLabels(reactive, label):
-            label.config(text=reactive.value)
-
+        # Updates labels with new train data
         def updateTrains(reactive, labels):
             i = 0
             for label in labels:
@@ -119,39 +104,27 @@ class App(threading.Thread):
 
         def updateScreen():
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
-            checkResize()
+            gui_helper.checkResize(self.root, resizeFonts)
             self.root.after(1000, updateScreen)
 
-        def checkResize():
-            w = self.root.winfo_width()
-            h = self.root.winfo_height()
-            if w > 1500 and h > 500:
-                resizeFonts(40, 40, 40, 55, 35)
-                return
-            elif w > 1000 and h > 500:
-                resizeFonts(35, 35, 35, 45, 25)
-                return
-            elif w > 600 and h > 400:
-                resizeFonts(25, 25, 25, 35, 15)
-                return
-            elif w > 300 and h > 200:
-                resizeFonts(15, 15, 15, 30, 10)
-                return
-
-        def resizeFonts(s_name, s_warning, s_time, s_trains, s_notification):
-            display_name_label['font'] = ('Calibri Light', s_name)
-            announcement_label['font'] = ('Calibri Light', s_notification)
-            warning_label['font'] = ('Calibri Light', s_warning)
-            time_label['font'] = ('Calibri Light', s_time)
-            for lLabel, rLabel in zip(left_labels, right_labels):
-                lLabel['font'] = ('Calibri Light', s_trains)
-                rLabel['font'] = ('Calibri Light', s_trains)
+        def resizeFonts(sizes):
+            display_name_label['font'] = ('Calibri Light', sizes['md'])
+            announcement_label['font'] = ('Calibri Light', sizes['md'])
+            warning_label['font'] = ('Calibri Light', sizes['lg'])
+            time_label['font'] = ('Calibri Light', sizes['md'])
+            for i in range(0, len(left_labels)):
+                if i < 2:
+                    left_labels[i]['font'] = ('Calibri Light', sizes['lg'])
+                    right_labels[i]['font'] = ('Calibri Light', sizes['lg'])
+                else:
+                    left_labels[i]['font'] = ('Calibri Light', sizes['xl'])
+                    right_labels[i]['font'] = ('Calibri Light', sizes['xl'])
 
         top_frame.grid(row=0, column=0, sticky="NSEW")
         warning_frame.grid(row=1, column=0, sticky="NSEW")
         main_frame.grid(row=1, column=0, sticky="NSEW")
         main_frame.tkraise()
 
-        changeNotification()
+        handleNotifications()
         updateScreen()
         self.root.mainloop()

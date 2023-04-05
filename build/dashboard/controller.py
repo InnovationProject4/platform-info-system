@@ -156,7 +156,9 @@ def connectToAggregator(log):
 
 # sets a new topic and its corresponding announcements
 def dbSet(data, topic):
-    cursor.execute("INSERT OR IGNORE INTO topics (topic) VALUES (?)", (topic,))
+    # cursor.execute("INSERT OR IGNORE INTO topics (topic) VALUES (?)", (topic,))
+    cursor.execute("INSERT INTO topics (topic) SELECT (?) WHERE NOT EXISTS (SELECT 1 FROM topics WHERE topic = ?)",
+                   (topic, topic))
     cursor.execute("SELECT id FROM topics WHERE topic = ?", (topic,))
     topic_id = cursor.fetchone()[0]
     cursor.execute("DELETE FROM announcements WHERE topic_id = ?", (topic_id,))

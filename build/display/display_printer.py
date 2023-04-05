@@ -6,20 +6,22 @@ import json
 import pytz
 
 # Reactive objects storing information for GUI
-# which update the GUI when the value changes
+# which can update the GUI when the value changes
 reactive_train_data = Reactive([])
-reactive_train_data2 = Reactive([])
+reactive_train_data2 = Reactive([])  # Used to store splitviews left platform data
 reactive_display_name = Reactive('')
 reactive_warnings = Reactive([])
 reactive_announcements = Reactive([])
 reactive_passing = Reactive(False)
+
+# Stores the time for the next passing train
 passing_train_time = ''
 
 # lists to store received messages
 message_list = []
 message_list2 = []
 
-
+# Stores information from the display
 topic_info_dict = {
     "station": "",
     "platform": "",
@@ -36,6 +38,7 @@ def convertUTCtoEET(time):
     return dt_helsinki.strftime('%H:%M')
 
 
+# Passing train check - function that the GUI checks every second
 def checkPassingTrain():
     try:
         global passing_train_time, reactive_passing
@@ -45,7 +48,7 @@ def checkPassingTrain():
         dt_helsinki = dt_utc.astimezone(pytz.timezone("Europe/Helsinki"))
         difference = dt_helsinki - time_now
 
-        # checks if passing train is one minute away from the station
+        # Checks if passing train is one minute away from the station
         if dt_helsinki > time_now and dt_helsinki.date() == time_now.date() and (difference.seconds / 60) <= 1:
             print("Passing train incoming. Stay away from the platform")
             reactive_passing.value = True
@@ -79,11 +82,10 @@ def printWarningOnDisplay(msg):
     print(f"\033[91m{parsed} \033[00m")
 
 
-# function to handle received messages
+# Function to handle received messages
 # Loops through the trains to separate each train with only one timetable into new_trains list
-# sorts the list by scheduled time and "next_ten_trains"
-def format_train_data(trains, reactive_trains):
-    # sorts the train data
+# Sorts the list by scheduled time and "next_ten_trains"
+def formatTrainData(trains, reactive_trains):
     global reactive_display_name
     topic_info_dict["station"] = trains[0]['stationFullname']
     new_trains = []
@@ -107,7 +109,7 @@ def format_train_data(trains, reactive_trains):
     sorted_trains = sorted(new_trains, key=lambda x: x[list(x.keys())[0]][0]['timetable'][0]['scheduledTime'])
     next_ten_trains = sorted_trains[:10]
 
-    # final formatting for displays
+    # final formatting for the GUI
     formatted_train_data = []
     for train in next_ten_trains:
         temp_train_data = []
@@ -120,10 +122,7 @@ def format_train_data(trains, reactive_trains):
             for timetable in train_data[0]["timetable"]:
                 temp_train_data.insert(4, timetable["destination"])
                 temp_train_data.insert(5, timetable["stop_on_stations"])
-                if timetable["liveEstimateTime"] is None:
-                    temp_train_data.insert(0, convertUTCtoEET(timetable["scheduledTime"]))
-                else:
-                    temp_train_data.insert(0, convertUTCtoEET(timetable["liveEstimateTime"]))
+                temp_train_data.insert(0, convertUTCtoEET(timetable["scheduledTime"]))
                 temp_train_data.insert(2, timetable['commercialTrack'])
                 # Checks if train is late or cancelled
                 if timetable["cancelled"] is False and timetable['differenceInMinutes'] == 0 or timetable['differenceInMinutes'] is None:
@@ -135,73 +134,75 @@ def format_train_data(trains, reactive_trains):
                     temp_train_data.insert(1, "→ " + new_time.strftime('%H:%M'))
 
         formatted_train_data.append(temp_train_data)
-    print(formatted_train_data)
     configureDisplayName()
     reactive_trains.value = formatted_train_data
 
 
-# start a thread to handle received messages
-def message_handler(stop_event):
+# Starts a thread to handle received messages.
+# The reason for this function is that several consecutive messages can come from the same mqtt channel,
+# for example if you subscribe with a wildcard subtopic.
+# In this case, it must be ensured that all messages have been received before other operations.
+def messageHandler(stop_event):
     global message_list, message_list2
 
     while not stop_event.is_set():
-        # wait for messages to arrive
+        # Waits for messages to arrive
         time.sleep(1)
-        # check if any new messages have arrived in the last second
+        # Checks if any new messages have arrived in the last second
         last_message_time = time.time()
         while time.time() - last_message_time < 10 and len(message_list) == 0:
             time.sleep(1)
-        # collect messages received during the last 10 seconds into a list
+        # Collects messages received during the last 10 seconds into a list
         if len(message_list) != 0:
             messages = message_list
             message_list = []
             try:
-                format_train_data(messages, reactive_train_data)
+                formatTrainData(messages, reactive_train_data)
             except Exception as e:
                 print("Error formatting train data: ", e)
         if len(message_list2) != 0:
             messages = message_list2
             message_list2 = []
             try:
-                format_train_data(messages, reactive_train_data2)
+                formatTrainData(messages, reactive_train_data2)
             except Exception as e:
                 print("Error formatting train data: ", e)
 
 
 stop_event = threading.Event()
-thread = threading.Thread(target=message_handler, args=(stop_event,))
+thread = threading.Thread(target=messageHandler, args=(stop_event,))
 thread.start()
 
 
+# Stops all running threads
 def stop_threads():
-    # Stop all running threads
-    global stop_event
-    global thread
-
+    global stop_event, thread
     stop_event.set()
     thread.join(timeout=0.1)
 
 
-def addTrains(msg, dict):
+def addTrains(msg, topic_dict):
     global message_list, topic_info_dict
-    if dict.get("station") is not None:
-        topic_info_dict["station"] = dict.get("station")
-    if dict.get("platform") is not None:
-        topic_info_dict["platform"] = dict.get("platform")
-    if dict.get("transit") is not None:
-        topic_info_dict["transit"] = dict.get("transit")
-    if dict.get("transport") is not None:
-        topic_info_dict["transport"] = dict.get("transport")
-    if dict.get("view") is not None:
-        topic_info_dict["view"] = dict.get("view")
+    if topic_dict.get("station") is not None:
+        topic_info_dict["station"] = topic_dict.get("station")
+    if topic_dict.get("platform") is not None:
+        topic_info_dict["platform"] = topic_dict.get("platform")
+    if topic_dict.get("transit") is not None:
+        topic_info_dict["transit"] = topic_dict.get("transit")
+    if topic_dict.get("transport") is not None:
+        topic_info_dict["transport"] = topic_dict.get("transport")
+    if topic_dict.get("view") is not None:
+        topic_info_dict["view"] = topic_dict.get("view")
     message_list.append(json.loads(msg))
 
 
+# Second addTrains is used to listen to another topic for a display using "splitview"
 def addTrains2(msg):
     global message_list2
     message_list2.append(json.loads(msg))
 
 
+# Configures the text for the display_name_label in views
 def configureDisplayName():
     global topic_info_dict, reactive_display_name
     name_dict = {

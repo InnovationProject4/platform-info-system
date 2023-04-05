@@ -15,6 +15,7 @@ def main():
     parser.add_argument('-right', type=str, help='enter right display platform number')
     args = parser.parse_args()
 
+    # Converting the arguments to the actual naming used in the topic
     conversion_dict = {
         "departures": "DEPARTURE",
         "arrivals": "ARRIVAL",
@@ -26,6 +27,10 @@ def main():
     args.transit = conversion_dict.get(args.transit, "+")
     args.transport = conversion_dict.get(args.transport, "#")
 
+    # 1. Checks if the correct arguments are given
+    # 2. Creates a display object that defines the necessary topics
+    # 3. Starts the GUI
+    # 4. Creates an MQTT connection based on the topics of the display object
     if args.view == "splitview" and None not in [args.s, args.left, args.right, args.transit, args.transport]:
         display = types.DualPlatform(args.s, args.left, args.right, args.transit, args.transport)
         split_view.App()
@@ -45,7 +50,6 @@ def main():
 
     elif args.view == "platformview" and None not in [args.s, args.p, args.transit, args.transport]:
         display = types.Platform(args.s, args.p, args.transit, args.transport, "platformview")
-        # Setting column names and table row count
         platform_view.App()
         mqtt.createConnection(display, args.view)
 

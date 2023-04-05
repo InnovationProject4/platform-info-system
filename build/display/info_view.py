@@ -62,23 +62,15 @@ class App(threading.Thread):
                          lambda e: announcements_label.configure(wraplength=(self.root.winfo_width() - 50)))
         dp.reactive_announcements.watch(lambda: updateNotification())
 
-        # Method for going through the different Notifications
-        def changeNotification():
+        # Method for going through Notifications
+        def handleNotifications():
             # Loops through the warnings
-            if self.warning_id >= len(dp.reactive_warnings.value):
-                self.warning_id = 0
-            if len(dp.reactive_warnings.value) > 0:
-                warning_label.config(text=dp.reactive_warnings.value[self.warning_id])
-            self.warning_id += 1
-
-            self.root.after(10000, changeNotification)
+            self.warning_id = gui_helper.changeNotification(self.warning_id, warning_label, dp.reactive_warnings.value)
+            self.root.after(10000, handleNotifications)
 
         def updateNotification():
             # shows warning alert of there are any
-            if len(dp.reactive_warnings.value) > 0 and dp.reactive_warnings.value[0] != '':
-                warning_frame.tkraise()
-            else:
-                main_frame.tkraise()
+            gui_helper.showWarning(main_frame, warning_frame, dp.reactive_warnings.value)
 
             # displays announcements
             if len(dp.reactive_announcements.value) > 0 and dp.reactive_announcements.value[0] != '':
@@ -86,39 +78,25 @@ class App(threading.Thread):
                 for announcement in dp.reactive_announcements.value:
                     text += '  ◦ ' + announcement + '\n\n'
                 announcements_label.configure(text=text)
+            else:
+                announcements_label.configure(text="")
 
         def updateScreen():
             time_label['text'] = datetime.now().strftime("%H:%M:%S")
-            checkResize()
+            gui_helper.checkResize(self.root, resizeFonts)
             self.root.after(1000, updateScreen)
 
-        def checkResize():
-            w = self.root.winfo_width()
-            h = self.root.winfo_height()
-            if w > 1500 and h > 500:
-                resizeFonts(50, 40, 40, 45)
-                return
-            elif w > 1000 and h > 500:
-                resizeFonts(45, 35, 35, 30)
-                return
-            elif w > 600 and h > 400:
-                resizeFonts(35, 25, 25, 20)
-                return
-            elif w > 300 and h > 200:
-                resizeFonts(25, 15, 15, 15)
-                return
-
-        def resizeFonts(s_name, s_warning, s_time, s_info):
-            display_name_label['font'] = ('Calibri Light', s_name)
-            warning_label['font'] = ('Calibri Light', s_warning)
-            time_label['font'] = ('Calibri Light', s_time)
-            announcements_label['font'] = ('Calibri Light', s_info)
+        def resizeFonts(sizes):
+            display_name_label['font'] = ('Calibri Light', sizes['md'])
+            warning_label['font'] = ('Calibri Light', sizes['lg'])
+            time_label['font'] = ('Calibri Light', sizes['md'])
+            announcements_label['font'] = ('Calibri Light', sizes['lg'])
 
         top_frame.grid(row=0, column=0, sticky="NSEW")
         warning_frame.grid(row=1, column=0, sticky="NSEW")
         main_frame.grid(row=1, column=0, sticky="NSEW")
         main_frame.tkraise()
 
-        changeNotification()
+        handleNotifications()
         updateScreen()
         self.root.mainloop()

@@ -82,6 +82,7 @@ def printWarningOnDisplay(msg):
     print(f"\033[91m{parsed} \033[00m")
 
 
+
 # Function to handle received messages
 # Loops through the trains to separate each train with only one timetable into new_trains list
 # Sorts the list by scheduled time and "next_ten_trains"
@@ -91,22 +92,20 @@ def formatTrainData(trains, reactive_trains):
     new_trains = []
     for train in trains:
         for schedule in train['schedule']:
-            for train_id, train_data in schedule.items():
-                for timetable in train_data:
-                    for timetable_entry in timetable["timetable"]:
-                        new_train = {
-                            train_id: [{
-                                "trainNumber": timetable["trainNumber"],
-                                "trainType": timetable["trainType"],
-                                "trainCategory": timetable["trainCategory"],
-                                "commuterLineID": timetable["commuterLineID"],
-                                "timetable": [timetable_entry]
-                            }]
-                        }
-                        new_trains.append(new_train)
+            new_train = {
+                "train_id": [{
+                    "trainNumber": schedule["trainNumber"],
+                    "trainType": schedule["trainType"],
+                    "trainCategory": schedule["trainCategory"],
+                    "commuterLineID": schedule["commuterLineID"],
+                    "timetable": schedule["timetable"]
+                }]
+            }
+            new_trains.append(new_train)
 
     # Picks 10 first trains which are sorted by scheduledTime
-    sorted_trains = sorted(new_trains, key=lambda x: x[list(x.keys())[0]][0]['timetable'][0]['scheduledTime'])
+    #sorted_trains = sorted(new_trains, key=lambda x: x[list(x.keys())[0]]['timetable'][0]['scheduledTime'])
+    sorted_trains = sorted(new_trains, key=lambda x: x['train_id'][0]['timetable']['scheduledTime'])
     next_ten_trains = sorted_trains[:10]
 
     # final formatting for the GUI
@@ -119,19 +118,18 @@ def formatTrainData(trains, reactive_trains):
                 temp_train_data.insert(3, train_data[0]['commuterLineID'])
             else:
                 temp_train_data.insert(3, f"{train_data[0]['trainType']}{train_data[0]['trainNumber']}")
-            for timetable in train_data[0]["timetable"]:
-                temp_train_data.insert(4, timetable["destination"])
-                temp_train_data.insert(5, timetable["stop_on_stations"])
-                temp_train_data.insert(0, convertUTCtoEET(timetable["scheduledTime"]))
-                temp_train_data.insert(2, timetable['commercialTrack'])
-                # Checks if train is late or cancelled
-                if timetable["cancelled"] is False and timetable['differenceInMinutes'] == 0 or timetable['differenceInMinutes'] is None:
-                    temp_train_data.insert(1, "")
-                elif timetable["cancelled"] is True:
-                    temp_train_data.insert(1, "Cancelled")
-                else:
-                    new_time = datetime.strptime(temp_train_data[0], '%H:%M') + timedelta(minutes=timetable['differenceInMinutes'])
-                    temp_train_data.insert(1, "→ " + new_time.strftime('%H:%M'))
+            temp_train_data.insert(4, train_data[0]["timetable"]["destination"])
+            temp_train_data.insert(5, train_data[0]["timetable"]["stop_on_stations"])
+            temp_train_data.insert(0, convertUTCtoEET(train_data[0]["timetable"]["scheduledTime"]))
+            temp_train_data.insert(2, train_data[0]["timetable"]['commercialTrack'])
+            # Checks if train is late or cancelled
+            if train_data[0]["timetable"]["cancelled"] is False and train_data[0]["timetable"]['differenceInMinutes'] == 0 or train_data[0]["timetable"]['differenceInMinutes'] is "":
+                temp_train_data.insert(1, "")
+            elif train_data[0]["timetable"]["cancelled"] is True:
+                temp_train_data.insert(1, "Cancelled")
+            else:
+                new_time = datetime.strptime(temp_train_data[0], '%H:%M') + timedelta(minutes=train_data[0]["timetable"]['differenceInMinutes'])
+                temp_train_data.insert(1, "→ " + new_time.strftime('%H:%M'))
 
         formatted_train_data.append(temp_train_data)
     configureDisplayName()
@@ -147,7 +145,7 @@ def messageHandler(stop_event):
 
     while not stop_event.is_set():
         # Waits for messages to arrive
-        time.sleep(1)
+        time.sleep(2)
         # Checks if any new messages have arrived in the last second
         last_message_time = time.time()
         while time.time() - last_message_time < 10 and len(message_list) == 0:

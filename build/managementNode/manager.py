@@ -113,102 +113,102 @@ class Manager:
                     "event": "ack",
                     "messageTimestamp": datetime.timestamp(datetime.now())
                 }))
-                
-    
-    #//////////////////
-    def publish(self, rows, station):
-        trains_baseinfo, schedules = rows
-        
-        for topic, trains in schedules.items():
-            responseData = defaultdict(list)
-             
-            for train_id, schedule in trains.items():
-                train_info = trains_baseinfo[train_id]
-                    
-                t = train_info.copy()
-                t["timetable"] = schedule
-                responseData[train_id].append(t)
-            
-            print(json.dumps({
-                        "stationFullname": self.get_full_stationname(station),
-                        "schedule": [responseData]
-                    }))
-            
-                
-            
+
+    #Checks each train and makes dic of each topic to be published to. Publishes eachs topic.
+    def publish(self, trains, station):
+        train_dict = {}
+        for train in trains:
+            topic = train['topic']
+            if topic not in train_dict:
+                train_dict[topic] = []
+            train_dict[topic].append(train)
+
+        for topic, train_list in train_dict.items():
+            sorted_train_list = sorted(train_list, key=lambda train: train['timetable']['scheduledTime'])
             self.conn.publish(topic, json.dumps({
-                    "stationFullname": self.get_full_stationname(station),
-                    "schedule": [responseData]
-                }))
-      
-   
+                "stationFullname": self.get_full_stationname(station),
+                "schedule": sorted_train_list
+            }))
 
     def parse(self, response, station):
-        ''' filter by keys 
-            (trainInfo, trainSchedule) '''
-        rows = defaultdict(lambda: defaultdict(list))
-        trains = dict()
-        
-        
-        for train in response: 
-            filtered = ({key : train[key] for key in t_filter}, {} | {'destination': self.get_full_stationname(train['timeTableRows'][-1]['stationShortCode'])})
-            
-            train_type = train.get("commuterLineID", None) or train.get("trainType", "?")
-             # TODO REDEFINE UGLY
-            if train.get("commuterLineID", None):
-                train_id = f'{train_type}'   
-            else:
-                train_id = f'{train.get("trainType", "?")}{train.get("trainNumber")}'
-            ##
-            
-            transport_type = train.get('trainCategory')
-            trains[train_id] = filtered[0]
-            
-            for i, row in enumerate(train['timeTableRows']):
-                
-                #local_offset = timedelta(hours=3)
-                timestamp = (datetime.utcnow()).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-                
-                
-                #dt = datetime.strptime(row["scheduledTime"], "%Y-%m-%dT%H:%M:%S.%fZ")
-                
-                #dt += local_offset
-                
-                #row["scheduledTime"] = dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-                
-                
-                
-                
-                
-                #print(row["scheduledTime"])
-                
-                #print("timestamp", timestamp)
-                
-                if row['stationShortCode'] == station and row["scheduledTime"] >= timestamp:
-                    for key in tt_filter:
-                        filtered[1][key] = row.get(key, None)
-                    
-                    
-                    # TODO this is temporary. It's possible to get flag from row enumerator when LEN is passed, then 
-                    
-                    for timerow in train['timeTableRows']:
-                        if timerow['stationShortCode'] == "LEN" and timerow['trainStopping']:
-                            if timerow["scheduledTime"] >= timestamp:
-                                filtered[1]["destination"] = self.get_full_stationname(timerow['stationShortCode'])
 
-                    slice = train['timeTableRows'][i+2:i+7]
-                    next_stops = []
-                    [next_stops.append(self.get_full_stationname(s["stationShortCode"])) for s in slice if self.get_full_stationname(s["stationShortCode"]) not in next_stops]
-                    filtered[1]["stop_on_stations"] = next_stops
-                    
-                    platform_id = row.get('commercialTrack', '?')
-                    transit = row.get('type')
-                    topic = f"station/{station}/{platform_id}/{transit}/{transport_type}"
-                    
-                    rows[topic][train_id].append(filtered[1])
-                    
-                    
-        return trains, rows
+        #List of trains that we return in the end
+        trains = []
+
+        #iterate through trains in response and filter wanted info based on t_filter
+        for train in response:
+            filtered_train = ({key : train[key] for key in t_filter})
+            if filtered_train["trainType"] != "HL":
+                filtered_train["commuterLineID"] = filtered_train["trainType"]+ str(filtered_train["trainNumber"])
+            filtered_train["destination"] = self.get_full_stationname(train["timeTableRows"][-1]["stationShortCode"])
+            
+            #List for filtered timetablerows of info of current stop to show
+            filtered_timetablerows = []
+            
+            this_stop = None
+            #Check for the wanted stop "this_stop" that matches station and hasn't passed yet.
+            for i, row in enumerate(train['timeTableRows']):
+                timestamp = (datetime.utcnow()).strftime("%Y-%m-%dT%H:%M:%S.%fZ") 
+                this_time = None
+                if row['stationShortCode'] == station:
+                    if 'actualTime' in row and row['actualTime'] is not None and row['actualTime'] != '':
+                        this_time = row['actualTime']
+                    else:
+                        this_time = row['scheduledTime']
+                    if this_time >= timestamp:
+                        #do something
+                        this_stop = i
+                        #checks next three stops for the train after this_stop
+                        next_three = []
+                        for r in train['timeTableRows'][this_stop+1:]:
+                            if r.get('commercialStop') and r.get('type') == "ARRIVAL" :
+                                if r.get('stationShortCode') != station:
+                                    next_three.append(r)
+                                    if len(next_three) >= 3:
+                                        break
+                        
+                        #filter the row based on tt_filter and add it to the list of filtered timetablerows
+                        filtered_row = {}
+                        for key in tt_filter:
+                            if key in row:
+                                filtered_row[key] = row[key]
+                            else:
+                                filtered_row[key] = ""
+                        filtered_row["stop_on_stations"] = [row['stationShortCode'] for row in next_three]
+                        filtered_timetablerows.append(filtered_row)
+                
+
+            
+            filtered_train["timetable"] = filtered_timetablerows
+
+            #each value in filtered_timetablerows represent a train
+            #variable t represents train
+            for i, timetablerow in enumerate(filtered_timetablerows):
+                t = filtered_train.copy()
+                t["timetable"] = timetablerow
+                timestamp = t["timetable"]["scheduledTime"]
+
+                #check kehäjuna and check if destination should be Airport(if it hasn't passed airport yet)
+                for i, row in enumerate(train['timeTableRows']):
+                    if row['stationShortCode'] == "LEN":
+                        if row['scheduledTime'] > timestamp:
+                            t["destination"] = self.get_full_stationname(row['stationShortCode'])
+                t["timetable"]["destination"] = t["destination"]
+
+                #Generate the topic based on the trains information and assig int as a value for key "topic"
+                #append the trains list with train "t"
+                platform_id = t["timetable"].get("commercialTrack", "")
+                transit = t["timetable"].get("type", "")
+                transport_type = t.get("trainCategory", "")
+                trains.append({
+                    **t,
+                    "topic": f"station/{station}/{platform_id}/{transit}/{transport_type}"
+                })
+
+        #sorted_trains = sorted(trains, key=lambda x: x["timetable"]["scheduledTime"])
+        #print(sorted_trains[:20])
+        return trains
+    
 
 
     def aggregation(self):
@@ -221,7 +221,7 @@ class Manager:
         self.trains = rata.Batch()
         for station in self.targets:
             self.trains.get(f'live-trains/station/{station}', payload={
-                'minutes_before_departure': 120,
+                'minutes_before_departure': 20,
                 'minutes_after_departure': 0,
                 'minutes_before_arrival' : 10,
                 'minutes_after_arrival': 0,

@@ -10,10 +10,25 @@ The goal of this project is to develop a train station display board system.
   
 ## Architecture  
   
-The management node which is running the aggregator retrieves rail traffic data from Digitraffic's services and uses MQTT protocol to distribute the data to different topics which the displays at railway station's can subscribe. In the display's implementation the data is then formatted and displayed in with a GUI. 
+The management node which is running the aggregator retrieves rail traffic data from Digitraffic's services and uses MQTT protocol to distribute the data to different topics which the displays at railway station's can subscribe. In the display's implementation the data is then validated, formatted and then displayed in with a GUI.
+
+![data flow diagram](doc/diagrams/Sequence_diagram.png)  
   
-![data flow diagram](doc/diagrams/data_flow_diagram.png)  
-  
+> Sequence starts asynchronously from steps 1 to 2
+> 1. Aggregator fetches data from Digitraffic.
+> 2. Digitraffic responds with JSON data that is
+   > filtered and published at step 5.
+   > Since the operation is asynchronous,
+   > data is published regardless whether any display is running.
+> 
+> From step 3 to 4, the display is selected to start
+> 3. Display sends a ping event that includes a public key identifying itself for the Aggregator.
+> 4. Aggregator sends an acknowledgment message with its public key.
+> 5. Aggregator publishes the fetched train data to their corresponding topics.
+> 6. Display verifies that the data has come from the aggregator and not from any external will. 
+   > After that, the data is formatted into a form that the user interface can display
+> 7. The User interface updates its view as it receives the formatted data.
+
 ### MQTT topic naming convention  
 Topic for train data
 ```sh  
@@ -43,7 +58,7 @@ Topic for device communication
 ```sh  
 management/<display-id>/update
 ```  
-> Subtopic **"update"** not mandatory and is used only for notifying the aggrigator to publish data from a database
+> Subtopic **"update"** not mandatory and is used only for notifying the aggregator to publish data from a database
 ## Installation  
   
 For running the build on Linux:

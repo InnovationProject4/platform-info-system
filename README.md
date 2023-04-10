@@ -1,3 +1,4 @@
+
 # Platform information system  
   
 #### ✨Developed at Metropolia's innovation project course for a client at Nokia.✨  
@@ -14,14 +15,10 @@ The management node which is running the aggregator retrieves rail traffic data 
 
 ![data flow diagram](doc/diagrams/Sequence_diagram.png)  
   
-> Sequence starts asynchronously from steps 1 to 2
+> - Sequence starts asynchronously from steps 1 to 2
 > 1. Aggregator fetches data from Digitraffic.
-> 2. Digitraffic responds with JSON data that is
-   > filtered and published at step 5.
-   > Since the operation is asynchronous,
-   > data is published regardless whether any display is running.
-> 
-> From step 3 to 4, the display is selected to start
+> 2. Digitraffic responds with JSON data that is filtered and published at step 5. Since the operation is asynchronous, data is published regardless whether any display is running.
+> - From step 3 to 4, the display is selected to start
 > 3. Display sends a ping event that includes a public key identifying itself for the Aggregator.
 > 4. Aggregator sends an acknowledgment message with its public key.
 > 5. Aggregator publishes the fetched train data to their corresponding topics.

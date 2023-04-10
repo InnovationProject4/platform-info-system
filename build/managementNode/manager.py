@@ -156,14 +156,14 @@ class Manager:
                     else:
                         this_time = row['scheduledTime']
                     if this_time >= timestamp:
-                        #do something
                         this_stop = i
                         #checks next three stops for the train after this_stop
                         next_three = []
                         for r in train['timeTableRows'][this_stop+1:]:
                             if r.get('commercialStop') and r.get('type') == "ARRIVAL" :
                                 if r.get('stationShortCode') != station:
-                                    next_three.append(r)
+                                    station_name = self.get_full_stationname(r.get('stationShortCode'))
+                                    next_three.append(station_name)
                                     if len(next_three) >= 3:
                                         break
                         
@@ -174,11 +174,9 @@ class Manager:
                                 filtered_row[key] = row[key]
                             else:
                                 filtered_row[key] = ""
-                        filtered_row["stop_on_stations"] = [row['stationShortCode'] for row in next_three]
+                        filtered_row["stop_on_stations"] = next_three
                         filtered_timetablerows.append(filtered_row)
-                
-
-            
+                            
             filtered_train["timetable"] = filtered_timetablerows
 
             #each value in filtered_timetablerows represent a train
@@ -195,7 +193,7 @@ class Manager:
                             t["destination"] = self.get_full_stationname(row['stationShortCode'])
                 t["timetable"]["destination"] = t["destination"]
 
-                #Generate the topic based on the trains information and assig int as a value for key "topic"
+                #Generate the topic based on the trains information and assign it as a value for key "topic"
                 #append the trains list with train "t"
                 platform_id = t["timetable"].get("commercialTrack", "")
                 transit = t["timetable"].get("type", "")
@@ -221,7 +219,7 @@ class Manager:
         self.trains = rata.Batch()
         for station in self.targets:
             self.trains.get(f'live-trains/station/{station}', payload={
-                'minutes_before_departure': 20,
+                'minutes_before_departure': 600,
                 'minutes_after_departure': 0,
                 'minutes_before_arrival' : 10,
                 'minutes_after_arrival': 0,

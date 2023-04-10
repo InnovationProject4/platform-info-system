@@ -123,7 +123,7 @@ def formatTrainData(trains, reactive_trains):
             temp_train_data.insert(0, convertUTCtoEET(train_data[0]["timetable"]["scheduledTime"]))
             temp_train_data.insert(2, train_data[0]["timetable"]['commercialTrack'])
             # Checks if train is late or cancelled
-            if train_data[0]["timetable"]["cancelled"] is False and train_data[0]["timetable"]['differenceInMinutes'] == 0 or train_data[0]["timetable"]['differenceInMinutes'] is "":
+            if train_data[0]["timetable"]["cancelled"] is False and train_data[0]["timetable"]['differenceInMinutes'] == 0 or train_data[0]["timetable"]['differenceInMinutes'] == "":
                 temp_train_data.insert(1, "")
             elif train_data[0]["timetable"]["cancelled"] is True:
                 temp_train_data.insert(1, "Cancelled")

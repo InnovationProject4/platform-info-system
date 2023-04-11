@@ -5,10 +5,18 @@ from setuptools import setup
 
 import wizard
 
+if os.name == "posix":
 
-INSTALL_DIR = '/opt/pids'
-USR_ETC_DIR = '/usr/local/etc/pids'
-SERVICE_FILE = '/etc/systemd/system/pids.service'
+    INSTALL_DIR = '/opt/pids'
+    USR_ETC_DIR = '/usr/local/etc/pids'
+    SERVICE_FILE = '/etc/systemd/system/pids.service'
+
+elif os.name == "nt":
+    
+    INSTALL_DIR = 'C:\Program Files\pids'
+    USR_ETC_DIR = '%SYSTEMROOT%\System32\config\systemprofile\AppData\Local\pids'
+    SERVICE_FILE = '%PROGRAMDATA%\pids'
+    
 
 def prompt(help, **kwargs):
     options = ' '.join(f'[{key}] {val}' for key, val in kwargs.items())
@@ -45,7 +53,7 @@ def find_mqtt_ip():
     
 def install():
     # Check if the app is already installed
-    print("")
+    print()
     if os.path.exists(INSTALL_DIR):
         print('Warning: passenger-information-system is already installed in {}.'.format(INSTALL_DIR))
         print('Please remove the existing installation before installing a new version.')
@@ -68,16 +76,18 @@ def install():
         print('setup.cfg not found. Aborting installation.')
         exit()
 
-    setup(use_cfg=True, data_files=[
+    setup(use_scm_version=True, data_files=[
             (USR_ETC_DIR, ['config.ini']),
         ])
+    
+    
 
     # Create the config.ini file
     config = configparser.ConfigParser()
     config['mqtt-broker'] = {'ip': find_mqtt_ip(), 'port': '1883'}
     config['sqlite'] = {'repository': 'database.db'}
     config['validation'] = {'token': '17adbcf543e851aa9216acc9d7206b96'}
-    config['display']  = {"fullscreen" : 0}
+    config['display']  = {"fullscreen" : 1}
 
     #if os.path.isdir(USR_ETC_DIR) == False:
     try:

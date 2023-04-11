@@ -1,6 +1,64 @@
-import  os, sys, termios, tty, shutil, subprocess, re
-import stationCodes
+import os, sys, shutil, subprocess, re
+import install.stationCodes as stationCodes
 from tabulate import tabulate
+
+
+if os.name == "posix":
+    # This code will be executed on Linux
+    import termios, tty
+    def getch():
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+
+        try:
+            tty.setcbreak(fd)  # or tty.setraw(fd) for raw mode.
+            return sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSAFLUSH, old)
+    
+    def check_services():
+        return subprocess.check_output(['systemctl', 'list-units', '--type=service', '--state=active', '--no-legend', '--no-pager', '--all', '*.pids.service*'], encoding='utf-8')
+    
+    
+    def clear(after=None):
+        os.system("clear")
+        if after is not None:
+            after()
+            
+    HANDLE  = '\x1b'        
+    UP      = 'A'
+    DOWN    = 'B'
+    LEFT    = 'K'
+    RIGHT   = 'M'
+    ENTER   = '\n'
+    SPACE   = ' '
+    BACKSPACE = "\x7f"
+            
+    
+    
+elif os.name == "nt":
+    # This code will be executed on Windows
+    import msvcrt
+    def getch():
+        return msvcrt.getch().decode()
+    
+    def check_services():
+        return subprocess.check_output(['sc', 'query', 'type=', 'service', 'state=', 'running', '|', 'findstr', 'pids'], shell=True, encoding='utf-8')
+    
+    def clear(after=None):
+        os.system("cls")
+        if after is not None:
+            after()
+            
+    HANDLE  = '\x00'        
+    UP      = 'H'
+    DOWN    = 'P'
+    LEFT    = 'K'
+    RIGHT   = 'M'
+    ENTER   = '\r'
+    SPACE   = ' '
+    BACKSPACE = '\b'
+
 
 
 '''
@@ -32,22 +90,6 @@ def fuzzy_search(query, texts):
     pattern = f'.*{query}.*'  # Build regex pattern to match query
     regex = re.compile(pattern, re.IGNORECASE)  # Compile regex
     return [text for text in texts if regex.search(text)]
-
-def getch():
-    fd = sys.stdin.fileno()
-    old = termios.tcgetattr(fd)
-
-    try:
-        tty.setcbreak(fd)  # or tty.setraw(fd) for raw mode.
-        return sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSAFLUSH, old)
-
-def clear(after=None):
-    os.system("clear")
-    #os.system("cls")
-    if after is not None:
-        after()
 
 def prompt(prompt, commands):
     response = input(prompt).lower()
@@ -90,13 +132,13 @@ def prompt_radioGroup(help, options, after=None):
         print("Selected:", options[selected])
         key = getch()
         
-        if key == "\x1b[A" or key == "A":  # Up arrow
+        if key == UP or key == "A":  # Up arrow
             selected = (selected - 1) % selection_max
-        elif key == "\x1b[B" or key == "B":  # Down arrow
+        elif key == DOWN or key == "B":  # Down arrow
             selected = (selected + 1) % selection_max
             
         # Exit on enter
-        elif key == "\n":
+        elif key == ENTER:
             return options[selected]
 
 def prompt_checklist(help, checklist, offset=10, limit=10, queryString="", after=None):
@@ -132,7 +174,7 @@ def prompt_checklist(help, checklist, offset=10, limit=10, queryString="", after
 
         # Prompt the user for input
         ch = getch()
-        if ch == " ":
+        if ch == SPACE:
             if options:
                 if options[cursor_pos] in selected:
                     selected.remove(options[cursor_pos])
@@ -142,47 +184,53 @@ def prompt_checklist(help, checklist, offset=10, limit=10, queryString="", after
         elif ch == "\r":
             if selected:
                 return selected
-        elif ch == "\n":
+        elif ch == ENTER:
             if selected:
                 return selected
-        elif ch == "\x1b":
-            getch() # Consume the second byte of an arrow key sequence
+        elif ch == HANDLE:
+            if os.name == 'posix': getch() # Consume the second byte of an arrow key sequence
             ch = getch()
-            if ch == "A":
+            if ch == UP or ch == LEFT:
                 cursor_pos = max(0, cursor_pos - 1)
                 if cursor_pos < scroll_offset:
                     scroll_offset = cursor_pos
-            elif ch == "B":
+            elif ch == DOWN or ch == RIGHT:
                 cursor_pos = min(len(options) - 1, cursor_pos + 1)
                 if cursor_pos >= scroll_offset + offset:
                     scroll_offset = cursor_pos - (offset - 1)
                     
-        elif ch == "\x7f":
+        elif ch == BACKSPACE:
             queryString = queryString[:-1] # Remove latest letter on backspace
             options = fuzzy_search(queryString, checklist)
         else:
-            queryString += ch
+            print(ch)
+            queryString += str(ch)
             options = fuzzy_search(queryString, checklist)
         print(ch)
     
         
 def print_list_services():
     '''get a list of information system services that are active'''
-    services = subprocess.check_output(['systemctl', 'list-units', '--type=service', '--state=active', '--no-legend', '--no-pager', '--all', '*.pids.service*'], encoding='utf-8')
-    table = []
-    for line in services.split('\n'):
-        if line:
-            name, status, description = line.split(maxsplit=2)
-            table.append([name, status, description])
-    
-    if table: 
-        # Print the table
-        print("currently active services: ")
-        print('{:<50}{:<10}{}'.format('Name', 'Status', 'Description'))
-        print('-' * 70)
-        for row in table:
-            print('{:<50}{:<10}{}'.format(*row))
-        print('-' * 70)
+    try:
+        services = check_services()
+        
+        table = []
+        for line in services.split('\n'):
+            if line:
+                name, status, description = line.split(maxsplit=2)
+                table.append([name, status, description])
+        
+        if table: 
+            # Print the table
+            print("currently active services: ")
+            print('{:<50}{:<10}{}'.format('Name', 'Status', 'Description'))
+            print('-' * 70)
+            for row in table:
+                print('{:<50}{:<10}{}'.format(*row))
+            print('-' * 70)
+        
+    except subprocess.CalledProcessError as e:
+        print(f"Command returned non-zero exit status {e.returncode}: {e.output}")
         
         
         
@@ -230,9 +278,8 @@ def run_display_wizard():
     right = None
     transit = None
     transport = None
-
-
-
+                
+        
     def build_args_string():
         ret = ""
         args = [('-view', view), ('-s', station), ('-transit', transit), ('-transport', transport)]
@@ -267,8 +314,8 @@ def run_display_wizard():
         left = input("Type left platform: ")
         right = input("Type right platform: ")
     else:
-        os.system("clear")
-        banner()
+        clear(after=banner)
+        #banner()
         platform= input("Type platform: ")
         
     station = (prompt_checklist("Select railway station(s) you want to listen for. Press SPACE to select: ", [' '.join(t) for t in stationCodes.names], after=banner, limit=1))[0].split(" ")[0]
@@ -276,8 +323,8 @@ def run_display_wizard():
     transit = prompt_radioGroup("Select transit type: ", ['departures', 'arrivals', "None"], after=banner)
     transport = prompt_radioGroup("Select transport type: ", ['commuter', 'long_distance', "None"], after=banner)
     
-    os.system("clear")
-    banner()
+    clear(after=banner)
+    #banner()
     response = prompt_option("Create display service file?", y="yes", n="no")
     if response == "y":
         service_file = create_service_file(f'{view}_{station}.pids', f'Display service for {view} at {station} platform {platform}', "display_client.py", build_args_string())
@@ -287,8 +334,11 @@ def run_display_wizard():
             install_service(service_file)
         
     elif response == "n":
-        response = prompt_option("Run display with python now?", y="yes", n="no")
+        response = prompt_option(color("Run display with python now?", "yellow"), y="yes", n="no")
         if response == "y":
+            commands = ["python3", "display_client.py"] + build_args_string().strip().split(" ")
+            res = subprocess.run(commands, stdout=subprocess.PIPE)
+            print(res.stdout.decode('utf-8'))
             pass
         
     response = prompt_option("continue?", y="yes", n="no")
@@ -296,6 +346,7 @@ def run_display_wizard():
     
 def run_aggregator_wizard():
     stations = []
+    gui = ""
     
     def build_args_string(append=""):
         if not stations:
@@ -309,29 +360,42 @@ def run_aggregator_wizard():
     def banner():
         print("Aggregator Creation Wizard!")
         print(tabulate([
-            ["-s, -station", "one or multiple station shortCodes: ex. HSL (Helsinki Asema)"]
+            ["-s, -station", "one or multiple station shortCodes: ex. HSL (Helsinki Asema)"],
+            ["-g, -gui", "execute with the UI editor on the side"]
         ]))
-        print(f'{color("-s", "light_blue")} \033[92m{build_args_string()}\033[0m')
+        col = "red" if len(stations) == 0 else "green"
+        print(f'{color(gui, "light_blue")} {color("-s", "light_blue")} {color(build_args_string(), col)}')
         
         
     selected = (prompt_checklist("Select railway station(s) you want to listen for. Press SPACE to select: ", [' '.join(t) for t in stationCodes.names], after=banner))
     for station in selected:
         stations.append(station.split(" ")[0])
     
-    os.system("clear")
-    banner()
+    
+    clear(after=banner)
+    #banner()
+    response = prompt_option("launch with graphical user interface?", y="yes", n="no")
+    if response == "y":
+        gui = "--gui"
+        
+    clear(after=banner)
+    #banner()
     response = prompt_option("Create display service file?", y="yes", n="no")
     if response == "y":
-        service_file = create_service_file(f'aggregator.pids', f'Data aggregator for platform-info-system', "aggregator.py", build_args_string("-s "))
+        service_file = create_service_file(f'aggregator.pids', f'Data aggregator for platform-info-system', "aggregator.py", build_args_string(gui + " -s "))
         
         response = prompt_option("Install aggregation service?", y="yes", n="no")
         if response == "y":
             install_service(service_file)
         
     elif response == "n":
-        response = prompt_option("Run aggregator with python now?", y="yes", n="no")
+        response = prompt_option(color("Run aggregator with python now?", "yellow"), y="yes", n="no")
         if response == "y":
-            pass
+            commands = ["python3", "aggregator.py", "-s"] + stations + [gui]
+            res = subprocess.run(commands, encoding='UTF-8', stdout=subprocess.PIPE)
+            print(res.stdout)
+            
+            response = prompt_option("continue?", y="yes", n="no")
         
 
 commandlist = [
@@ -352,7 +416,7 @@ def main():
     os.system('tput smcup')
     
     while True:
-        os.system('clear')
+        clear()
         print("Welcome to the display creation wizard!\n")
         print_list_services()
         print(tabulate(commandlist, headers='firstrow'))
@@ -363,9 +427,7 @@ def main():
         elif cmd == commands[2]: run_aggregator_wizard()
         elif cmd == "quit": break
         
-
-
-    
+        
     os.system('tput rmcup')
 
 

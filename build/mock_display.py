@@ -30,7 +30,7 @@ class Client:
         
         self.status = INIT
         
-        self.conn = Connection("87.92.91.48", 1883)
+        self.conn = Connection("87.94.149.204", 1883)
     
     def connect(self):
         print("connecting...")

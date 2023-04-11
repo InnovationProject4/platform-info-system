@@ -5,17 +5,15 @@ from utils.tkui import Viewport
 from messaging.telemetry import Connection
 from utils.Event import Reactive
 
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
+import utils.chart as chart
 
 import time, math
 
 #TODO : CONNECTION FACTORY AND ON CONNECT OBSERVER
 
-conn = Connection("87.94.153.50", 1883)
+conn = Connection("localhost", 1883)
 conn.connect()
-
+''''''
 ### Broker Message stats #######################################################################################################
 class MessageStatsView(Viewport):
     '''
@@ -66,12 +64,10 @@ class MessageStatsView(Viewport):
                 self.sent_aggregation(message.payload)
             ) )
             
-            
-            
+        
           
              
         ])
-        
         
 
     def received_aggregation(self, payload):
@@ -112,7 +108,7 @@ class MessageStatsView(Viewport):
     
     def message_widgets(self):
         
-        self.stats_label = tk.Label(self, text="Mosquitto Broker Statistics")
+        self.stats_label = tk.Label(self, text="Broker Statistics")
         self.stats_label.pack()
         
         received_label = tk.Label(self, text="Messages Received: ")
@@ -129,28 +125,21 @@ class MessageStatsView(Viewport):
             sent_label.configure(text="Messages Sent: " + str(self.messages_sent.value))
         ))
         
-        self.fig = Figure(figsize=(6,4), dpi=100)
-        self.ax = self.fig.add_subplot(111)
-        self.ax.set_xlabel("Time (min)")
-        self.ax.set_ylabel("Message Count")
-        self.received_line, = self.ax.plot([], [], label="Messages Received")
-        self.sent_line, = self.ax.plot([], [], label="Messages Sent")
-        self.ax.legend()
         
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self)
-        self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+        self.chart = chart.LineChart(
+            self, width=600, height=400, hbar_size=5, vbar_size=5,
+            hbar_fg="#101010", vbar_fg="#444444", sections_fg="#444444", 
+            text_color="red", font=('arial', 8, 'bold'),
+            sections=True, sections_count=10, max_value=100,
+            labels=True, labels_count=10, line_len=20,
+            left=10, right=10, bottom=40, top=40,
+            x=0, y=0
+        )
+        
+        self.chart.pack(fill=tk.BOTH, expand=True)
+    
         
         return self
-    
-    
-    def message_rate_gauge(self):
-        gauge = MessageRateGauge(self)
-        
-        return gauge
-        
-        
-        
-   
         
         
         

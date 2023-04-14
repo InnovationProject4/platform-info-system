@@ -2,7 +2,6 @@ from managementNode.manager import Manager
 from utils import tkui
 # from managementNode.views.brokerstats import MessageStatsView, MessageRateGauge
 from managementNode.views.displaystats import DeviceMonitoring
-
 import time, argparse, threading, traceback
 
 
@@ -11,7 +10,6 @@ parser.add_argument('-g', '--gui', action="store_true", help='enter dashboard mo
 parser.add_argument('-s', '--station', nargs="+", required=True, help='add which railway station(s) to listen for using shortStationCode')
 
 args = parser.parse_args()
-
 
 manager = Manager(args.station)
 DeviceMonitoring.attach(manager.get_displayinfo)
@@ -37,16 +35,16 @@ if __name__ == '__main__':
             app.run()
             
        )).start()
-        
-    
+
     try:
         while True:
             manager.get_displayinfo()
             manager.trains.send()
+            for station in args.station:
+                manager.publish_passing_train_data(station)
             time.sleep(60)
     except:
         traceback.print_exc()
     finally:
         manager.conn.disconnect()
         
-       

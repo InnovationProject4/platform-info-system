@@ -8,6 +8,7 @@ import configparser
 from collections import defaultdict
 from managementNode import announcement_manager
 from utils.Event import observable
+from managementNode import passing_train
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -228,3 +229,14 @@ class Manager:
                 filtered := self.parse(response.json(), station),
                 self.publish(filtered, station)
             ))
+
+    def publish_passing_train_data(self, station):
+        topic = f"station/{station}/passing"
+        passing_train_data = passing_train.get_passing_train(station)
+
+        if passing_train_data:
+            formatted_data = {
+                "station": station,
+                "trains": passing_train_data
+            }
+            self.conn.publish(topic, json.dumps(formatted_data), 0)

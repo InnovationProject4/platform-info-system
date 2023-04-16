@@ -1,5 +1,4 @@
-from tkinter import Label, Frame
-
+from tkinter import Label, Toplevel, Canvas
 
 # Configures the grid of a tableview
 def configureGrid(frame, grid, rows, columnlabels):
@@ -100,3 +99,72 @@ def changeNotification(notification_id, notification_label, notifications):
     notification_id += 1
     # Returns an id of the next notification
     return notification_id
+
+
+class SplashTriangle(Toplevel):
+    '''
+    example of a triangle splash screen usage
+
+    root = tk.Tk()
+    root.geometry('800x600')
+
+    splash = SplashTriangle(root, 'Varokaa ohittavaa Junaa', "Beware of the passing train", "Se upp för täget som passerar stationen")
+    splash.show(15000)
+
+    root.mainloop()
+    '''
+
+    def __init__(self, parent, *messages):
+        super().__init__(parent)
+        # self.attributes('-type', 'splash')
+        self.overrideredirect(True)
+        self.attributes('-topmost', True)
+        self.withdraw()
+
+        self.geometry('+%d+%d' % (parent.winfo_x(), parent.winfo_y()))
+        self.update_idletasks()
+
+        pw = parent.winfo_width()
+        ph = parent.winfo_height()
+
+        ''' canvas relative size and anchor to parent
+            default width expected 600
+            default height expected 400
+        '''
+        rsize = int((pw / 600) * 250)
+        padding = 80
+        xpos = pw - rsize - padding
+        ypos = ph - rsize - padding
+
+        # top corner
+        x1 = rsize // 2 + xpos
+        y1 = ypos
+
+        # left corner
+        x2 = xpos
+        y2 = rsize + ypos
+
+        # right corder
+        x3 = rsize + xpos
+        y3 = rsize + ypos
+
+        self.canvas = Canvas(self, width=pw, height=ph, bg='#00008b')
+        self.canvas.pack()
+        self.triangle = self.canvas.create_polygon(x1, y1, x2, y2, x3, y3, fill="yellow", outline="red", width=15)
+
+        dy = 50
+        for message in messages:
+            text = self.canvas.create_text(50, dy, width=450, text=message, anchor="nw",
+                                           font=("Helvetica", self.resize_font(pw), "bold"), fill="white")
+            dy += self.canvas.bbox(text)[3] - self.canvas.bbox(text)[1] + 40
+
+    def resize_font(self, width):
+        return int((width / 600) * 12)
+
+    def hide(self):
+        self.withdraw()
+
+    def show(self, duration):
+        self.deiconify()
+        self.after(duration, self.hide)
+        self.update_idletasks()

@@ -54,8 +54,6 @@ class App(threading.Thread):
         time_label = Label(top_frame, text="", fg='white', bg='#031626', font=('Calibri Light', 15))
         time_label.grid(row=0, column=1, sticky="E", padx=(0, 20))
 
-        passing_label = Label(self.root, text="Passing train incoming. Stay away from the platform",
-                              fg='white', bg='#031626', font=('Calibri Light', 15))
         announcement_label = Label(self.root, text="", fg='white', bg='#031626', font=('Calibri Light', 15))
         announcement_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
         dp.reactive_announcements.watch(lambda: updateNotification())
@@ -69,6 +67,9 @@ class App(threading.Thread):
         train_labels, column_labels = gui_helper.fillGrid(main_frame, self.rowcount, self.column_labels)
         dp.reactive_train_data.watch(lambda: updateTrains(dp.reactive_train_data, train_labels))
 
+        splash = gui_helper.SplashTriangle(self.root, 'Varokaa ohittavaa Junaa', "Beware of the passing train",
+                                           "Se upp för täget som passerar stationen")
+
         # Method for going through Notifications
         def handleNotifications():
             # Loops through the announcements
@@ -80,12 +81,8 @@ class App(threading.Thread):
         def updateNotification():
             # shows passing alert if there is a passing train
             if dp.reactive_passing.value:
-                announcement_label.grid_forget()
-                passing_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
-            # if else show announcement label
-            elif len(dp.reactive_announcements.value) > 0:
-                passing_label.grid_forget()
-                announcement_label.grid(row=2, column=0, sticky="NSEW", pady=(0, 7))
+                splash.show(60000)
+
             # shows warning alert of there are any
             gui_helper.showWarning(main_frame, warning_frame, dp.reactive_warnings.value)
 
@@ -119,7 +116,6 @@ class App(threading.Thread):
         def resizeFonts(sizes):
             display_name_label['font'] = ('Calibri Light', sizes['md'])
             announcement_label['font'] = ('Calibri Light', sizes['md'])
-            passing_label['font'] = ('Calibri Light', sizes['md'])
             warning_label['font'] = ('Calibri Light', sizes['lg'])
             time_label['font'] = ('Calibri Light', sizes['md'])
             for label in column_labels:

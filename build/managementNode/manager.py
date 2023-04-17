@@ -139,8 +139,6 @@ class Manager:
         #iterate through trains in response and filter wanted info based on t_filter
         for train in response:
             filtered_train = ({key : train[key] for key in t_filter})
-            if filtered_train["trainType"] != "HL":
-                filtered_train["commuterLineID"] = filtered_train["trainType"]+ str(filtered_train["trainNumber"])
             filtered_train["destination"] = self.get_full_stationname(train["timeTableRows"][-1]["stationShortCode"])
             
             #List for filtered timetablerows of info of current stop to show
@@ -175,7 +173,7 @@ class Manager:
                                 filtered_row[key] = row[key]
                             else:
                                 filtered_row[key] = ""
-                        filtered_row["stop_on_stations"] = next_three
+                        filtered_row["stopOnStations"] = next_three
                         filtered_timetablerows.append(filtered_row)
                             
             filtered_train["timetable"] = filtered_timetablerows

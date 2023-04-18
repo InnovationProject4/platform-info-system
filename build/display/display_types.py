@@ -21,8 +21,8 @@ class Central(Display):
     def handleSubscriptions(self):
         return [
             (f"station/{self.station}/+/{self.transit}/{self.transport}", lambda client, userdata, message: (
-                data := printer.verify(message.topic, message.payload.decode()),
-                printer.addTrains(data.decode(), {"station": self.station, "transit": self.transit, "transport": self.transport, "view": "tableview"}) if data is not None else None
+                data := printer.verify(message.topic, message.payload),
+                printer.addTrains(data, {"station": self.station, "transit": self.transit, "transport": self.transport, "view": "tableview"}) if data is not None else None
             )),
             (f"announcement/alert/{self.station}", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())
@@ -46,7 +46,7 @@ class Platform(Display):
             (f"station/{self.station}/{self.platform_number}/{self.transit}/{self.transport}",
              lambda client, userdata, message: (
                  data := printer.verify(message.topic, message.payload),
-                 printer.addTrains(data.decode(), {"platform": self.platform_number, "transit": self.transit, "transport": self.transport, "view": self.view}) if data is not None else None
+                 printer.addTrains(data, {"platform": self.platform_number, "transit": self.transit, "transport": self.transport, "view": self.view}) if data is not None else None
              )),
             (f"announcement/alert/{self.station}/{self.platform_number}", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())
@@ -73,12 +73,12 @@ class DualPlatform(Display):
             (f"station/{self.station}/{self.platform_number1}/{self.transit}/{self.transport}",
              lambda client, userdata, message: (
                  data := printer.verify(message.topic, message.payload),
-                 printer.addTrains(data.decode(), {"view": "splitview"}) if data is not None else None
+                 printer.addTrains(data, {"view": "splitview"}) if data is not None else None
              )),
             (f"station/{self.station}/{self.platform_number2}/{self.transit}/{self.transport}",
              lambda client, userdata, message: (
                  data := printer.verify(message.topic, message.payload),
-                 printer.addTrains2(data.decode()) if data is not None else None
+                 printer.addTrains2(data) if data is not None else None
              )),
             (f"announcement/alert/{self.station}", lambda client, userdata, message: (
                 printer.printWarningOnDisplay(message.payload.decode())

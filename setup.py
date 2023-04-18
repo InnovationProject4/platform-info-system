@@ -6,7 +6,7 @@ from setuptools import setup
 # workaround bug https://github.com/pypa/pip/issues/7953
 site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
 
-import wizard
+import build.wizard
 
 APP_NAME = 'pids'
 CONFIG_INI = 'config.ini'

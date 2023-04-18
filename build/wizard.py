@@ -726,7 +726,7 @@ def run_config_wizard():
                 
                 pfk = None
                 
-                if config.has_section("validation") and config.has_option("validation", "token"):
+                if config.has_section("validation") and os.path.exists(ENC_PATH):
                     print(color("Warning: Validation uses encrypted storage. Enter the current password on existing validation key.", "red"))
                     
                     new_token = False

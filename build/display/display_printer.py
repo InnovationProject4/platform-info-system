@@ -39,6 +39,9 @@ def convertUTCtoEET(time):
     date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
     dt_utc = pytz.timezone("UTC").localize(datetime.strptime(time, date_format))
     dt_helsinki = dt_utc.astimezone(pytz.timezone("Europe/Helsinki"))
+    if dt_helsinki.second >= 30:  # Round up seconds if 30 or greater
+        dt_helsinki += datetime.timedelta(minutes=1)
+    dt_helsinki = dt_helsinki.replace(second=0, microsecond=0)  # Round down seconds to 00
     return dt_helsinki.strftime('%H:%M')
 
 
@@ -113,11 +116,12 @@ def formatTrainData(trains, reactive_trains):
     t = BPTree(factor=50)
 
     for train in trains:
-        print(len(train))
         popped = train.pop("schedule")
         t.bulk_insert(popped, lambda x: x['scheduledTime'])
 
     sorted = query.select_nodes(t.traverse, 10)
+
+    print(sorted)
 
     formatted_train_data = []
     for train in sorted:
@@ -128,10 +132,10 @@ def formatTrainData(trains, reactive_trains):
         temp_train_data.insert(0, convertUTCtoEET(train["scheduledTime"]))
         temp_train_data.insert(2, train['commercialTrack'])
         # Checks if train is late or cancelled
-        if train["cancelled"] is False and train['differenceInMinutes'] == 0 or train['differenceInMinutes'] == "" or train['differenceInMinutes'] is None:
-            temp_train_data.insert(1, "")
-        elif train["cancelled"] is True:
+        if train["cancelled"] is True:
             temp_train_data.insert(1, "Cancelled")
+        elif train["cancelled"] is False and train['differenceInMinutes'] == 0 or train['differenceInMinutes'] == "" or train['differenceInMinutes'] is None:
+            temp_train_data.insert(1, "")
         else:
             if train['differenceInMinutes']:
                 new_time = datetime.strptime(temp_train_data[0], '%H:%M') + timedelta(minutes=train['differenceInMinutes'])

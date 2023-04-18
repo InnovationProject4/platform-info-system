@@ -6,8 +6,6 @@ from setuptools import setup
 # workaround bug https://github.com/pypa/pip/issues/7953
 site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
 
-import build.wizard as wizard
-
 APP_NAME = 'pids'
 CONFIG_INI = 'config.ini'
 
@@ -124,12 +122,6 @@ def install():
         print('Failed to create config.ini', ex)
         
 
-def run_wizard():
-    response = prompt("Would you like to run creation wizard now?", y="yes", n="no")
-    if response == "y":
-        wizard.main()
-
 
 if __name__ == "__main__":
     install()
-    run_wizard()

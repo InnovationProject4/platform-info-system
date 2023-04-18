@@ -384,6 +384,8 @@ def run_display_wizard():
     else:
         clear(after=banner)
         platform= input("Type platform: ")
+        if platform == "":
+            platform = None
         
     station = (prompt_checklist("Select railway station(s) you want to listen for. Press SPACE to select: ", [' '.join(t) for t in stationCodes.names], after=banner, limit=1))[0].split(" ")[0]
     

@@ -226,6 +226,7 @@ class Manager:
             # inner join with train table 
             s['commuterLineID'] = trains.find(trainNumber).get("commuterLineID", "")
             s['trainCategory'] = trains.find(trainNumber).get("trainCategory", "")
+            s['runningCurrently'] = trains.find(trainNumber).get("runningCurrently", "")
                 
             
             # insert timetable id as reference foreign key, into topic_rows table with topic as key

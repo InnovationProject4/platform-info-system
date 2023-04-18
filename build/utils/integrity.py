@@ -194,7 +194,7 @@ def verifyAndExtract(signed_message, cert):
     """
     verified = verifySignature(*extract(signed_message), cert)
     if verified:
-        message = extract(signed_message)[0]
+        message = extract(signed_message)[1]
         return message
     else:
         print("Invalid signature!")

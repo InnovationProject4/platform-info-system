@@ -100,9 +100,7 @@ def install():
         print('setup.cfg not found. Aborting installation.')
         exit()
 
-    setup(use_scm_version=True, data_files=[
-            (USR_ETC_DIR, [CONFIG_INI]),
-        ])
+    setup(use_scm_version=True)
     
     
 
@@ -110,7 +108,6 @@ def install():
     config = configparser.ConfigParser()
     config['mqtt-broker'] = {'ip': find_mqtt_ip(), 'port': '1883'}
     config['sqlite'] = {'repository': 'database.db'}
-    config['validation'] = {'token': '17adbcf543e851aa9216acc9d7206b96'}
     config['display']  = {"fullscreen" : 1}
 
     #if os.path.isdir(USR_ETC_DIR) == False:

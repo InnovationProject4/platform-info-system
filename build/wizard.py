@@ -1,5 +1,5 @@
 import os, sys, shutil, subprocess, re, hashlib
-import install.stationCodes as stationCodes
+from install import stationCodes
 from tabulate import tabulate
 from utils.conf import Conf, ENC_PATH, CONFIG_PATH
 
@@ -472,7 +472,6 @@ def run_aggregator_wizard():
         if response == "y":
             commands = ["python3", "aggregator.py", "--station"] + stations
             proc = subprocess.run(commands, encoding='UTF-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            proc.communicate()
             
             
     elif response == choices[1]:

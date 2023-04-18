@@ -101,7 +101,7 @@ class Manager:
             display.schema()
 
             info = data['message']
-            args = (info['uuid'], info['display_name'], info['display_type'], dao.CONNECTED , data['messageTimestamp'], info['startTimestamp'])
+            args = (info['uuid'], 0, info['display_name'], info['display_type'], dao.CONNECTED , data['messageTimestamp'], info['startTimestamp'])
 
             display.insert(*args)
             

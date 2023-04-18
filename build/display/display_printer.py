@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from utils.Event import Reactive
 import json
 import pytz
+import utils.conf as conf
+import utils.integrity as integrity
 
 # Reactive objects storing information for GUI
 # which can update the GUI when the value changes
@@ -13,6 +15,7 @@ reactive_display_name = Reactive('')
 reactive_warnings = Reactive([])
 reactive_announcements = Reactive([])
 reactive_passing = Reactive(False)
+reactive_toast = Reactive("")
 
 # Stores the time for the next passing train
 passing_train_time = ''
@@ -37,6 +40,17 @@ def convertUTCtoEET(time):
     dt_helsinki = dt_utc.astimezone(pytz.timezone("Europe/Helsinki"))
     return dt_helsinki.strftime('%H:%M')
 
+# push a notification label on the display
+def toast(message):
+    reactive_toast.value = message
+
+def verify(topic, message):
+    '''Verify the integrity of data and extract the message, else return None'''
+    res = integrity.verifyAndExtract(message.decode(), conf.Conf().cert)
+    if res == None:
+        '''message certifivate is invalid, toast orange message'''
+        reactive_toast.value = ["A Message failed to pass integrity test", "warn"]
+    return res
 
 # Passing train check - function that the GUI checks every second
 def checkPassingTrain():
@@ -56,7 +70,6 @@ def checkPassingTrain():
             reactive_passing.value = False
     except ValueError:
         pass
-
 
 def printPassingTrainOnDisplay(msg):
     try:

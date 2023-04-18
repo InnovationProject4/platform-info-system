@@ -1,4 +1,4 @@
-import configparser
+from utils.conf import Conf
 import json
 import sys
 import sqlite3
@@ -7,10 +7,9 @@ import uuid
 
 from messaging.telemetry import Connection
 
-config = configparser.ConfigParser()
-config.read('config.ini')
 
-repository = config.get('sqlite', 'repository')
+
+repository = Conf().config.get('sqlite', 'repository')
 db = sqlite3.connect(repository)
 db.row_factory = sqlite3.Row
 cursor = db.cursor()
@@ -26,8 +25,8 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS announcements
                  topic_id INTEGER REFERENCES topics(id))''')
 db.commit()
 
-ip = config.get('mqtt-broker', 'ip')
-port = config.get('mqtt-broker', 'port')
+ip = Conf().config.get('mqtt-broker', 'ip')
+port = Conf().config.get('mqtt-broker', 'port')
 # creating a mqtt client
 conn = Connection(ip, int(port))
 

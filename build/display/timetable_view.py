@@ -1,12 +1,10 @@
-import configparser
 from tkinter import *
 import threading
 from display import gui_helper, display_printer as dp, mqtt_connection as mqtt
 from datetime import datetime
+from utils.conf import Conf
 
-config = configparser.ConfigParser()
-config.read('config.ini')
-full_screen = config.get('display', 'fullscreen')
+full_screen = Conf().config.get('display', 'fullscreen')
 
 
 class App(threading.Thread):
@@ -69,6 +67,8 @@ class App(threading.Thread):
 
         splash = gui_helper.SplashTriangle(self.root, 'Varokaa ohittavaa Junaa', "Beware of the passing train",
                                            "Se upp för täget som passerar stationen")
+        
+        dp.reactive_toast.watch(lambda root=self.root: getattr(gui_helper.ToastMessage(root, dp.reactive_toast.value[0]), dp.reactive_toast.value[1])())
 
         # Method for going through Notifications
         def handleNotifications():

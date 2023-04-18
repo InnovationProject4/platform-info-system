@@ -1,4 +1,4 @@
-from tkinter import Label, Toplevel, Canvas
+from tkinter import Label, Toplevel, Canvas, TclError
 
 # Configures the grid of a tableview
 def configureGrid(frame, grid, rows, columnlabels):
@@ -168,3 +168,129 @@ class SplashTriangle(Toplevel):
         self.deiconify()
         self.after(duration, self.hide)
         self.update_idletasks()
+
+
+
+class ToastMessage(Toplevel):
+    """
+    Display toast messages in tkinter GUI. Toasts stack at bottom left corner.
+
+    Attributes:
+        instances (list): List of all the instances of ToastMessage.
+        toastlevel (int): A counter to track the number of active toasts.
+
+    Args:
+        parent: The parent window for the toast message. Root Window recommended.
+        message (str): The message to be displayed in the toast.
+        duration (int, optional): The duration of the toast in milliseconds. Default is 3000.
+        bg (str, optional): The background color of the toast. Default is '#323232'.
+        fg (str, optional): The foreground color of the toast. Default is '#ffffff'.
+        font (tuple, optional): The font of the toast. Default is ('Helvetica', 12).
+
+    Methods:
+
+        show(self):
+            Displays the toast message with a default background.
+
+        warn(self):
+            Displays the toast message with a yellow background.
+
+        error(self):
+            Displays the toast message with a red background.
+
+        success(self):
+            Displays the toast message with a green background.
+    """
+    
+    instances = []
+    toastlevel = 1
+    
+    def __init__(self, parent, message, duration=3000, bg='#323232', fg='#ffffff', font=('Helvetica', 12)):
+        super().__init__(parent)
+        self.attributes('-type', 'splash')
+        self.overrideredirect(True)
+        self.attributes('-topmost', True)
+        self.withdraw()
+        
+        self.bg = bg
+        self.fg = fg
+        self.font = font
+        self.duration = duration
+        
+        self.message = Label(self, text=message, bg=bg, fg=fg, font=font)
+        self.message.pack(pady=(10, 10), padx=10, expand=True)
+        self.message.configure(wraplength=parent.winfo_width(), anchor='w')
+        self.prev_y = parent.winfo_y() + parent.winfo_height()
+        
+        self.bindID = parent.bind("<Configure>", self.update_position,  add="+")
+       
+       
+    def show(self):
+        self.deiconify()
+        self.update_idletasks()
+        
+         # Get the position of the master window
+        x = self.master.winfo_rootx()
+        y = self.master.winfo_rooty() + (self.master.winfo_height() - self.winfo_height() * ToastMessage.toastlevel)
+        self.Y = (self.master.winfo_y() + self.master.winfo_height()) - y 
+    
+        self.geometry("+{}+{}".format(x, y))
+        self.update()
+        self.attributes('-alpha', 0.0)
+        self.fade_in()
+        self.master.after(self.duration, self.fade_out)
+        
+    
+    def update_position(self, event):
+        if event.widget == self.master:
+            try:
+                x = self.master.winfo_x()
+                y = (int(event.y) + int(event.height)) - int(self.Y)
+                self.geometry('+%d+%d' % (x, y))
+                self.update()
+            except TclError:
+                pass
+        
+    def warn(self):
+        ''' yellow color setup'''
+        self.configure(bg="#FFC107")
+        self.message.configure(bg="#FFC107", fg="#333333")
+        self.show()
+        
+    def error(self):
+        ''' red color setup'''
+        self.configure(bg="#F44336")
+        self.message.configure(bg="#F44336", fg="#FFFFFF")
+        self.show()
+        
+    def success(self):
+        ''' green color setup'''
+        self.configure(bg="#4CAF50")
+        self.message.configure(bg="#4CAF50", fg="#FFFFFF")
+        self.show()
+        
+        
+    def fade_in(self):
+        ToastMessage.toastlevel += 1
+        ToastMessage.instances.append(self)
+        
+        start_x = self.master.winfo_rootx() - self.winfo_width()
+        stop_x = self.master.winfo_rootx()
+        distance = start_x - stop_x
+        
+        for i in range(20):
+            progress = (i + 1) / 20
+            x_new = start_x - distance * progress
+            self.geometry("+{}+{}".format(int(x_new), (int(int(self.master.winfo_y())) + int(self.master.winfo_height())) - int(self.Y)))
+            self.update_idletasks()
+        
+        
+    def fade_out(self):     
+        self.master.unbind("<Configure>", self.bindID)
+        ToastMessage.instances.remove(self)
+        ToastMessage.toastlevel -= 1
+        self.destroy()
+        for instance in ToastMessage.instances:
+            self.Y = instance.winfo_y() + instance.winfo_height()
+            instance.geometry('+%d+%d' % (instance.master.winfo_x(), self.Y))
+            instance.update()

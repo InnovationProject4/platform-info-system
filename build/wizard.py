@@ -1,6 +1,7 @@
-import os, sys, shutil, subprocess, re
+import os, sys, shutil, subprocess, re, hashlib
 import install.stationCodes as stationCodes
 from tabulate import tabulate
+from utils.conf import Conf, ENC_PATH, CONFIG_PATH
 
 
 if os.name == "posix":
@@ -19,7 +20,19 @@ if os.name == "posix":
     def check_services():
         return subprocess.check_output(['systemctl', 'list-units', '--type=service', '--state=active', '--no-legend', '--no-pager', '--all', '*.pids.service*'], encoding='utf-8')
     
-    
+    def grep(sstring, file):
+        try:
+            result = subprocess.run(['grep', sstring, file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+            
+            if result.returncode == 0:
+                return result.stdout.strip().split("\n")
+            else:
+                print("no matching keys found.")
+        
+        except subprocess.CalledProcessError as e:
+            print(e.output)
+            print(e.stderr)
+        
     def clear(after=None):
         os.system("clear")
         if after is not None:
@@ -33,6 +46,27 @@ if os.name == "posix":
     ENTER   = '\n'
     SPACE   = ' '
     BACKSPACE = "\x7f"
+    
+    
+    def prompt_password(prompt='Password: ', stream=None):
+        """Prompt for password with echo off, using Unix getch()."""
+        for c in prompt:
+            sys.stdout.write(c)
+            sys.stdout.flush()
+        pw = ""
+        while True:
+            c = getch()
+            if c == ENTER or c == ' ':
+                print()
+                return pw
+            elif c == BACKSPACE:
+                if len(pw) == 0:
+                    continue
+                pw = pw[:-1]
+                print('\b \b', end='', flush=True)
+            else:    
+                pw += c
+                print('*', end='', flush=True)
             
     
     
@@ -50,6 +84,19 @@ elif os.name == "nt":
         if after is not None:
             after()
             
+    def grep(sstring, file):
+        try:
+            result = subprocess.run(['findstr',  sstring, file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
+            
+            if result.returncode == 0:
+                return result.stdout.strip().split("\r\n")
+            else:
+                print("no matching keys found.")
+        
+        except subprocess.CalledProcessError as e:
+            print(e.output)
+            print(e.stderr)
+            
     HANDLE  = '\x00'        
     UP      = 'H'
     DOWN    = 'P'
@@ -58,6 +105,28 @@ elif os.name == "nt":
     ENTER   = '\r'
     SPACE   = ' '
     BACKSPACE = '\b'
+    
+    def prompt_password(prompt='Password: ', stream=None):
+        """Prompt for password with echo off, using Windows getch()."""
+        for c in prompt:
+            msvcrt.putch(c.encode())
+        pw = ""
+        while True:
+            c = msvcrt.getch().decode()
+            if c == ENTER or c == '  ':
+                msvcrt.putch('\r'.encode())
+                msvcrt.putch(' '.encode())  # extra space after the password
+                return pw
+            elif c == BACKSPACE:
+                if len(pw) == 0:
+                    continue
+                pw = pw[:-1]
+                msvcrt.putch('\b'.encode())
+                msvcrt.putch(' '.encode())
+                msvcrt.putch('\b'.encode())
+            else:
+                pw += c
+                msvcrt.putch('*'.encode())
 
 
 
@@ -97,7 +166,6 @@ def prompt(prompt, commands):
         print(f"Invalid command: {response}", flush=True)
         response = input(prompt).strip()
     return response
-
     
 def prompt_option(help, **kwargs):
     options = ' '.join(f'[{key}] {val}' for key, val in kwargs.items())
@@ -315,7 +383,6 @@ def run_display_wizard():
         right = input("Type right platform: ")
     else:
         clear(after=banner)
-        #banner()
         platform= input("Type platform: ")
         
     station = (prompt_checklist("Select railway station(s) you want to listen for. Press SPACE to select: ", [' '.join(t) for t in stationCodes.names], after=banner, limit=1))[0].split(" ")[0]
@@ -324,26 +391,41 @@ def run_display_wizard():
     transport = prompt_radioGroup("Select transport type: ", ['commuter', 'long_distance', "None"], after=banner)
     
     clear(after=banner)
-    #banner()
-    response = prompt_option("Create display service file?", y="yes", n="no")
-    if response == "y":
-        service_file = create_service_file(f'{view}_{station}.pids', f'Display service for {view} at {station} platform {platform}', "display_client.py", build_args_string())
+    
+
+    choices = ['Run with python', 'Run in background', "Install systemd service (Experimental)"]
+    
+    response = prompt_radioGroup("How do you want to run the Display? Press ENTER to select: ", choices, after=banner)
+    if response == choices[0]:
+        clear(after=banner)
         
-        response = prompt_option("Install display service?", y="yes", n="no")
-        if response == "y":
-            install_service(service_file)
-        
-    elif response == "n":
         response = prompt_option(color("Run display with python now?", "yellow"), y="yes", n="no")
         if response == "y":
             commands = ["python3", "display_client.py"] + build_args_string().strip().split(" ")
             res = subprocess.run(commands, stdout=subprocess.PIPE)
             print(res.stdout.decode('utf-8'))
-            pass
+    
         
+    elif response == choices[1]:
+        clear(after=banner)
+        pass
+    
+    
+    
+    elif response == choices[2]:
+        print(color("This feature is experimental and may not work on your system. Proceed with caution!", "red"))
+        response = prompt_option("Create display service file?", y="yes", n="no")
+        if response == "y":
+            service_file = create_service_file(f'{view}_{station}.pids', f'Display service for {view} at {station} platform {platform}', "display_client.py", build_args_string())
+            
+            response = prompt_option("Install display service?", y="yes", n="no")
+            if response == "y":
+                install_service(service_file)
+    
+    
     response = prompt_option("continue?", y="yes", n="no")
-    
-    
+   
+ 
 def run_aggregator_wizard():
     stations = []
     gui = ""
@@ -373,35 +455,350 @@ def run_aggregator_wizard():
     
     
     clear(after=banner)
-    #banner()
     response = prompt_option("launch with graphical user interface?", y="yes", n="no")
     if response == "y":
         gui = "--gui"
         
     clear(after=banner)
-    #banner()
-    response = prompt_option("Create display service file?", y="yes", n="no")
-    if response == "y":
-        service_file = create_service_file(f'aggregator.pids', f'Data aggregator for platform-info-system', "aggregator.py", build_args_string(gui + " -s "))
-        
-        response = prompt_option("Install aggregation service?", y="yes", n="no")
-        if response == "y":
-            install_service(service_file)
-        
-    elif response == "n":
+    
+    choices = ['Run with python', 'Run in background', "Install systemd service (Experimental)"]
+    
+    response = prompt_radioGroup("How do you want to run Aggregation? Press ENTER to select: ", choices, after=banner)
+    
+    
+    if response == choices[0]:
+        clear(after=banner)
         response = prompt_option(color("Run aggregator with python now?", "yellow"), y="yes", n="no")
         if response == "y":
-            commands = ["python3", "aggregator.py", "-s"] + stations + [gui]
-            res = subprocess.run(commands, encoding='UTF-8', stdout=subprocess.PIPE)
-            print(res.stdout)
+            commands = ["python3", "aggregator.py", "--station"] + stations
+            proc = subprocess.run(commands, encoding='UTF-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc.communicate()
             
-            response = prompt_option("continue?", y="yes", n="no")
+            
+    elif response == choices[1]:
+        if gui != "":
+            print(color("WARNING: GUI is not supported in background mode.", "red"))
+            print("<continue>")
+            response = getch()
+            return
         
+        commands = ["python3", "aggregator.py", "--station"] + stations
+        p = subprocess.Popen(commands, stdout=subprocess.PIPE)
+        p.communicate()
+        
+        clear(after=banner)
+    
+    
+    
+    elif response == choices[2]:
+        print(color("This feature is experimental and may not work on your system. Proceed with caution!", "red"))
+        response = prompt_option("Create display service file?", y="yes", n="no")
+        if response == "y":
+            service_file = create_service_file(f'aggregator.pids', f'Data aggregator for platform-info-system', "aggregator.py", build_args_string(gui + " -s "))
+            
+            response = prompt_option("Install aggregation service?", y="yes", n="no")
+            if response == "y":
+                install_service(service_file)
+    
+    
+    
+    
+  
+    response = prompt_option("continue?", y="yes", n="no")
+    
+    
 
+def run_config_wizard():
+    dirty=False
+    
+    config = Conf().config
+    
+    def visualize_hashkey(pk):
+        color_map = {
+            0:  ['/', '\033[48;5;16m'],   # black
+            1:  ['-', '\033[48;5;1m'],    # red
+            2:  ['\\', '\033[48;5;2m'],    # green
+            3:  ['|', '\033[48;5;3m'],    # yellow
+            4:  ['_', '\033[48;5;4m'],    # blue
+            5:  [' ', '\033[48;5;5m'],    # magenta
+            6:  ['+', '\033[48;5;6m'],    # cyan
+            7:  ['-', '\033[48;5;7m'],    # white
+            8:  ['=', '\033[48;5;8m'],    # bright black
+            9:  ['B', '\033[48;5;9m'],    # bright red
+            10: ['C', '\033[48;5;10m'],  # bright green
+            11: ['E', '\033[48;5;11m'],  # bright yellow
+            12: ['F', '\033[48;5;12m'],  # bright blue
+            13: ['H', '\033[48;5;13m'],  # bright magenta
+            14: ['I', '\033[48;5;14m'],  # bright cyan
+            15: ['G', '\033[48;5;15m'],  # bright white
+        }
+
+        # Print the key data as a hex grid
+        line_len = 64
+        for i, byte in enumerate(pk):
+            if i % line_len == 0:
+                print()
+            c = color_map[byte >> 4][1] + color_map[byte & 0x0F][1]  # use the first and second nibble as the color code
+            print(f'{c}{color_map[byte >> 4][0]}\033[0m', end='')
+        print('\033[0m', flush=True)  # reset the color to default at the end
+        print()
+    
+    def banner():
+        print("Configuration Wizard!", end="\n")
+        print()
+        print(tabulate([
+            ['Command', 'Description'],
+            ["edit", "edit a stored value in sections"],
+            ["add <section> <key> <value>", "add a new key-value pair to section"],
+            ["rm <section> <key>", "remove a key-value pair from section"],  
+            ["grep <some key|some value>", "search for a key-value pair"],
+            ["gen", "Generate encrypted validation key for data signing"],
+            ["ls", "list all sections"],
+            ["save", "commit and save all changes"],
+            ["exit", "save modified config and exit the wizard"],
+            ["help", "show this banner"],
+            [color("config location", "purple"), color(f"{ CONFIG_PATH }", "purple")],
+        ], headers="firstrow"))
+        if dirty:
+            print(color("There are unsaved changes in config awaiting for user action.", "blue"))
+        print()
+        
+    
+    clear(after=banner)
+    while True:
+
+        command = input(f'wizard# ({color("*config", "yellow") if dirty else color("config", "green")}):  ')
+        
+        if command == "exit":
+            if dirty:
+                response = prompt_option(color("Config buffer was modified. Save changes?", "yellow"), y="yes", n="no")
+                if response == "y":
+                    try:
+                        with open(CONFIG_PATH, "w") as f:
+                            config.write(f)
+                        dirty=False
+                        clear(after=banner)
+                        print(color("Changes were saved!", "green"))
+                    except:
+                        print("Could not save changes!")
+            break
+                
+        elif command == "save":
+            response = prompt_option(color("Save changes?", "yellow"), y="yes", n="no")
+            if response =="y":
+                try:
+                    with open(CONFIG_PATH, "w") as f:
+                        config.write(f)
+                    dirty=False
+                    clear(after=banner)
+                    print(color("Changes were saved!", "green"))
+                        
+                except Exception as e:
+                    print(color("Warning: Could not save changes!", "red"))
+                    print(e)
+                    
+            else: 
+                clear(after=banner)
+                print("No changes were saved.")
+                    
+        elif command.startswith("grep"):
+            key = command.split(" ")[1:]
+            if len(key) == 0:
+                print(color("Error: No key or value was given!", "red"))
+                continue
+            
+            group = grep(str(key[0]), CONFIG_PATH)
+            if group:
+                print()
+                for i in group:
+                    print(i)
+                    
+                print()
+                print("Found", len(group), "matches.")         
+            
+        elif command.startswith("edit"):
+            try:
+                section = prompt_radioGroup("Select section to edit. Press ENTER to continue: ", config.sections())
+                key = prompt_radioGroup("Select key to edit. Press ENTER to continue: ", [k for k, v in config[section].items()])
+                
+                print("editing key", key, "in section", section)
+                print("current value:", config[section][key])
+                
+                value = input(color("new value: ", "yellow"))
+                
+
+                response = prompt_option(color("continue? [x] to abort.", "yellow"), y="yes", n="no")
+                if response == "y":
+                    config.set(section, key, value)
+                    dirty = True
+                    
+                    clear(after=banner)
+                    print(color("Value was successfully changed!", "green"))
+            
+            except Exception as e: 
+                print(e)
+                print(color("Error: Invalid command!", "red"), str(command))
+            
+        elif command.startswith("add"):
+            try:
+                keys = command.split(" ")[1:]
+                
+                if len(keys) == 1:
+                    section = keys[0]
+                    
+                    response = prompt_option(color(f"Add {section} section to config?", "yellow"), y="yes", n="no")
+                    if response == "y":
+                        config.add_section(section)
+                        dirty = True
+                        
+                        clear(after=banner)
+                        print(color("Section was successfully added!", "green"))
+                    
+                elif len(keys) == 3:
+                    section = keys[0]
+                    key = keys[1]
+                    value = keys[2]
+                    
+                    response = prompt_option(color(f"Add {value} to {key}:{section}?", "yellow"), y="yes", n="no")
+                    if response == "y":
+                        if section not in config.sections():
+                            config.add_section(section)
+                            
+                        config.set(section, key, value)
+                        dirty = True
+                        
+                        clear(after=banner)
+                        print(color("Value was successfully added!", "green"))
+                
+                else:
+                    print(color("Error: Invalid command!", "red"), str(command))
+                    
+                   
+                
+            except Exception as e:
+                print(e)
+                print(color("Error: Invalid command!", "red"))
+           
+        elif command.startswith("rm"):
+            try:
+                keys = command.split(" ")[1:]
+                
+                if len(keys) == 1:
+                    section = keys[0]
+                    
+                    response = prompt_option(color(f"Remove {section} section from config?", "yellow") + f'\n{color("Warning: Removing section will discard of all key-value pairs", "red")}', y="yes", n="no")
+                    if response == "y":
+                        config.remove_section(section)
+                        dirty = True
+                        
+                        clear(after=banner)
+                        print(color("Section was successfully removed!", "green"))
+                    
+                elif len(keys) == 2:
+                    section = keys[0]
+                    key = keys[1]
+                    
+                    response = prompt_option(color(f"Remove {key}:{section}?", "yellow"), y="yes", n="no")
+                    if response == "y":
+                        config.remove_option(section, key)
+                        dirty = True
+                        
+                        if len(config[section].items()) == 0:
+                            config.remove_section(section)
+                        
+                        clear(after=banner)
+                        print(color("Key was successfully removed!", "green"))
+                
+                else:
+                    print(color("Error: Invalid command!", "red"), str(command))
+                    
+            except Exception as e:
+                print(e)
+                print(color("Error: Invalid command!", "red"), str(command))
+                
+        elif command == "gen":
+            new_token = True
+            response = prompt_option(color("Warning: Changing validation keys on the fly may cause unintended behaviour. Be very careful when you make these changes.\n", "red") + color("Generate validation key?", "yellow"), y="yes", n="no")
+            if response == "y":
+                clear(after=banner)
+                
+                import utils.integrity as integrity
+                
+                pfk = None
+                
+                if config.has_section("validation") and config.has_option("validation", "token"):
+                    print(color("Warning: Validation uses encrypted storage. Enter the current password on existing validation key.", "red"))
+                    
+                    new_token = False
+                    pfk = hashlib.sha256(prompt_password("Enter password: ").encode()).digest()
+                    k, _ = integrity.load(ENC_PATH, str(pfk))
+                   
+                    if not k:
+                        print(color("Error: Verification failed: Invalid password!", "red"))
+                        print("<any key to abort>")
+                        getch()
+                        break
+                    
+                    response = prompt_option("Change password?", y="yes", n="no")
+                    if response == "y":
+                        new_token = True
+                            
+                if new_token:
+                    clear(after=banner)
+                    print(color("Warning: This action will replace password token on config file. PASSWORD MUST BE SAME AS ONE USED BY THE APPLICATION.", "red"))
+                    pfk = hashlib.sha256(prompt_password("Enter new password: ").encode()).digest()
+                    while True:
+                        passwd2 = hashlib.sha256(prompt_password("Confirm new password: ").encode()).digest()
+                        if pfk == passwd2:
+                            break
+                
+                clear()
+                print("generating validation keys...")
+                cert, pfx = integrity.keygen()
+                prk = hex(pfx.to_cryptography_key().private_numbers().d)[2:].encode()
+                pvk = hex(cert.get_pubkey().to_cryptography_key().public_numbers().n)[2:].encode()
+
+                print("Private Key")
+                visualize_hashkey(prk)
+                
+                print("Public Key")
+                visualize_hashkey(pvk)
+                
+                
+                response = prompt_option(color("Use generated keys?", "yellow"), y="yes", n="no")
+                if response == "y":
+                    if not config.has_section("validation"):
+                        config.add_section("validation")
+                    
+                    config.set("validation", "token", str(pfk))
+                    
+                    integrity.dump(pfx, cert, str(pfk), ENC_PATH, CONFIG_PATH)
+                    
+                    clear(after=banner)
+                    print(color("Keys were successfully generated and added!", "green"))
+                
+                
+            
+        elif command == "help" or command == "clear":
+            clear(after=banner)
+        elif command == "ls":
+            print(tabulate([[f'<Section {section}>', k] for section in config.sections() for k, v in config[section].items()]))
+        else:
+            print(color("Error: Unknown command was given!", "red"), str(command))
+
+def run_uninstall_wizard(): 
+    prompt_option( color("WARNING: ", "red") + color("This will uninstall Platform Information System and all of its data. \nDo you want to continue?", "yellow"), y="yes", n="no")
+    import install.uninstall
+    print("<Press any key to finish>")
+    getch()
+   
+   
 commandlist = [
     ['Command', 'Description'],
     ['display', 'create a display'],
     ['aggregator', 'create an aggregator (management node)'],
+    ['config', 'edit configuration file'],
+    ['uninstall', 'uninstall the application'],
     ['quit', 'exit the wizard']
 ]
 
@@ -417,14 +814,16 @@ def main():
     
     while True:
         clear()
-        print("Welcome to the display creation wizard!\n")
+        print("Welcome to the Platform Information System wizard!\n")
         print_list_services()
         print(tabulate(commandlist, headers='firstrow'))
         
         cmd = prompt("wizard# ", commands)
         
         if cmd == commands[1]: run_display_wizard()
-        elif cmd == commands[2]: run_aggregator_wizard()
+        elif cmd == commands[2]: run_aggregator_wizard(),
+        elif cmd == commands[3]: run_config_wizard(),
+        elif cmd == commands[4]: run_uninstall_wizard(),
         elif cmd == "quit": break
         
         

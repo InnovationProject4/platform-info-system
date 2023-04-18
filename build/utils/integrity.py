@@ -9,8 +9,14 @@ __all__ = (
     "verifySignature",
     "verifyAndExtract"
 )
-import json, hashlib, configparser, binascii
+import json, hashlib, binascii
+from utils.conf import Conf
+from datetime import datetime, timedelta
+import warnings
 
+#https://www.pyopenssl.org/en/stable/changelog.html#id37
+# we don't use deprecated features. str for passphrase is no longer accepted, use bytes
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
 from OpenSSL.crypto import (
     TYPE_RSA,
     FILETYPE_PEM,
@@ -18,28 +24,114 @@ from OpenSSL.crypto import (
     FILETYPE_TEXT,
     Error,
     PKey,
+    dump_certificate,
+    dump_privatekey,
+    load_certificate,
     sign,
     verify,
-    load_certificate,
-    load_publickey,
-    load_privatekey,
+    load_pkcs12,
     X509,
+    X509Name,
     PKCS12,
-    PKCS7
+    
 )
+
+
+config = Conf().config
 
 
 def keygen():
     """Generate RSA 2048 public-private pair with keylength of 2048
 
     Returns:
-        cert, PKey: public X509 certificate, private-public pair
+        cert, PKey: public X509 certificate, PKCS12 Key
     """
-    cert = X509()
     key = PKey()
     key.generate_key(TYPE_RSA, 2048)
+    
+    cert = X509()
+    
+    # https://stackoverflow.com/questions/33764285/python-openssl-how-to-create-an-x509name-object
+    subject = X509Name(cert.get_subject())
+    subject.CN = b"platform-info-display"
+    cert.set_subject(subject)
+    
+    issuer = X509Name(cert.get_subject())
+    issuer.CN = b"platform-info-display"
+    cert.set_issuer(issuer)
+    
+    now = datetime.utcnow()
+    expiry_date = now + timedelta(days=365)
+    cert.set_notBefore(now.strftime("%Y%m%d%H%M%SZ").encode())
+    cert.set_notAfter(expiry_date.strftime("%Y%m%d%H%M%SZ").encode())
+    
     cert.set_pubkey(key)
+    cert.sign(key, "sha256")
+    
     return cert, key
+
+
+def dump(key, cert, password, enc_file, config_file):
+    """Dump the key to encrypted PKCS12 file and token to config file
+
+    Args:
+        key (PKey): PKCS12 Key
+        cert (X509): public X509 certificate
+        password (str): password to encrypt the key
+        enc_file (str): path to encrypted file
+        config_file (str): path to config file
+    """
+    
+    if 'validation' not in config.sections():
+        config.add_section('validation')
+    
+    pkcs12 = PKCS12()
+    pkcs12.set_certificate(cert)
+    pkcs12.set_privatekey(key)
+    pkcs12.set_ca_certificates([cert])
+    
+    digest = binascii.hexlify(pkcs12.export(passphrase=password.encode()))
+    config.set('validation', 'token', password)
+    
+    try: 
+        with open(enc_file, "wb") as f:
+            f.write(digest)
+        
+        with open(config_file, "w") as f:
+            config.write(f)
+    except IOError as ex:
+        print(f"Failed to write to {config_file}/{enc_file}", ex)
+    
+    return digest
+
+
+def load(path, password): 
+    """Load the key from encrypted file
+
+    Args:
+        path (str): path to encrypted file
+        password (str): password to decrypt the key
+
+    Returns:
+        X509, PKey: X509 Certificate, PKCS12 Key
+    """
+
+    try:
+        with open(path, "rb") as ef:
+            enc_data = ef.read()
+            
+            pfx = load_pkcs12(bytes.fromhex(enc_data.decode()), password.encode())
+            return pfx.get_certificate(), pfx.get_privatekey()
+    
+    except Error:
+        print("verify failure on PKCS12 file")
+        return None, None
+        
+    except IOError as ex:
+        print(f"Failed to read {path}", ex)
+        return None, None
+    
+   
 
 
 def signMessage(message, private_key):
@@ -47,7 +139,7 @@ def signMessage(message, private_key):
 
     Args:
         message (str): message to digest
-        private_key (PKey): cryptographic private-public pair
+        private_key (PKey): PKCS12 Key
 
     Returns:
         str: signed message in hexadecimal string
@@ -107,11 +199,13 @@ def verifyAndExtract(signed_message, cert):
     else:
         print("Invalid signature!")
         return None
-    
+
+
     
 def test():
     # Define the message to be signed
     msg = json.dumps({
+        'timeStamp': "",
         'stationFullname': 'Pasila asema',
         'schedule': [
         {
@@ -146,13 +240,7 @@ def test():
 
     signature, message = extract(signed)
 
-    #print("verified", verifySignature(signature, message, cert))
-    
-    
-test()
-
-
-
+    print("verified", verifySignature(signature, message, cert))
 
 
 

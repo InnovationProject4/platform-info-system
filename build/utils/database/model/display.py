@@ -2,6 +2,7 @@
 
 CONNECTED       = "connected"
 DISCONNECTED    = "disconnected"
+UNTRUSTED       = "untrusted"
 
 NOCODE          = 0
 PLATFORM        = 1
@@ -12,8 +13,9 @@ class Display:
     Database Access Object
     
     '''
-    def __init__(self, uuid="", message_timestamp="", start_timestamp="", name="Unknown Device", display_type="", conn=None):
+    def __init__(self, uuid="", pk="", message_timestamp="", start_timestamp="", name="Unknown Device", display_type="", conn=None):
         self.uuid = uuid
+        self.pk = pk
         self.display_name = name
         self.display_type = display_type
         self.status = DISCONNECTED
@@ -27,6 +29,7 @@ class Display:
         CREATE TABLE IF NOT EXISTS display(
         id INTEGER PRIMARY KEY,
         uuid TEXT unique,
+        pk TEXT unique,
         display_name TEXT unique,
         display_type INTEGER,
         status INTEGER,
@@ -37,11 +40,12 @@ class Display:
         self.conn.commit()
     
 
-    def insert(self, uuid, display_name, display_type, status, message_timestamp, start_timestamp):
-        self.conn.execute('''INSERT OR REPLACE INTO display(uuid, display_name, display_type, status, last_message_timestamp, start_timestamp)  \
-        VALUES (:uuid, :display_name, :display_type, :status, :last_message_timestamp, :start_timestamp)''',
+    def insert(self, uuid, pk, display_name, display_type, status, message_timestamp, start_timestamp):
+        self.conn.execute('''INSERT OR REPLACE INTO display(uuid, pk, display_name, display_type, status, last_message_timestamp, start_timestamp)  \
+        VALUES (:uuid, :pk, :display_name, :display_type, :status, :last_message_timestamp, :start_timestamp)''',
         {
             "uuid": uuid,
+            "pk": pk,
             "display_name": display_name,
             "display_type": display_type,
             "status": status,

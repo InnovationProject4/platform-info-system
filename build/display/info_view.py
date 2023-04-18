@@ -1,12 +1,11 @@
-import configparser
+from utils.conf import Conf
 from tkinter import *
 import threading
 from display import gui_helper, display_printer as dp, mqtt_connection as mqtt
 from datetime import datetime
 
-config = configparser.ConfigParser()
-config.read('config.ini')
-full_screen = config.get('display', 'fullscreen')
+
+full_screen = Conf().config.get('display', 'fullscreen')
 
 
 class App(threading.Thread):
@@ -61,6 +60,8 @@ class App(threading.Thread):
         announcements_label.bind('<Configure>',
                          lambda e: announcements_label.configure(wraplength=(self.root.winfo_width() - 50)))
         dp.reactive_announcements.watch(lambda: updateNotification())
+        
+        dp.reactive_toast.watch(lambda root=self.root: getattr(gui_helper.ToastMessage(root, dp.reactive_toast.value[0]), dp.reactive_toast.value[1])())
 
         # Method for going through Notifications
         def handleNotifications():

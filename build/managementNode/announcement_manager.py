@@ -1,11 +1,10 @@
-import configparser
+from utils.conf import Conf
 import json
 import sqlite3
 import time
 
-config = configparser.ConfigParser()
-config.read('config.ini')
-repository = config.get('sqlite', 'repository')
+
+repository = Conf().config.get('sqlite', 'repository')
 
 db = sqlite3.connect(repository)
 cursor = db.cursor()

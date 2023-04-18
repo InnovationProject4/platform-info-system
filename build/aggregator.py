@@ -1,8 +1,9 @@
-from managementNode.manager import Manager
-from utils import tkui
+from managementNode.manager3 import Manager
+from utils import tkui, conf
 # from managementNode.views.brokerstats import MessageStatsView, MessageRateGauge
 from managementNode.views.displaystats import DeviceMonitoring
 import time, argparse, threading, traceback
+
 
 
 parser = argparse.ArgumentParser(description='launch management with dashboard GUI')
@@ -11,8 +12,10 @@ parser.add_argument('-s', '--station', nargs="+", required=True, help='add which
 
 args = parser.parse_args()
 
+print(args.station)
+
 manager = Manager(args.station)
-DeviceMonitoring.attach(manager.get_displayinfo)
+DeviceMonitoring.attach(manager.get_displayinfo)        
 
 if __name__ == '__main__':
     

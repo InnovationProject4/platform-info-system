@@ -229,9 +229,12 @@ class Manager:
             ))
 
     def publish_passing_train_data(self, station):
-        topic = f"station/{station}/passing"
+        # Create MQTT topic for passing train announcements for specific station
+        topic = f"announcement/passing/{station}"
+        # Get the list of passing train data for the specified station
         passing_train_data = passing_train.get_passing_train(station)
 
+        # If there is passing train data available for the station, format the data into a dictionary with the station code and passing train data list
         if passing_train_data:
             formatted_data = {
                 "station": station,

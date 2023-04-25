@@ -54,7 +54,7 @@ class Platform(Display):
             (f"announcement/info/{self.station}/{self.platform_number}", lambda client, userdata, message: (
                 printer.printAnnouncementsOnDisplay(message.payload.decode())
             )),
-            (f"station/{self.station}/passing", lambda client, userdata, message: (
+            (f"announcement/passing/{self.station}", lambda client, userdata, message: (
                 printer.printPassingTrainOnDisplay(message.payload.decode())
             ))]
 

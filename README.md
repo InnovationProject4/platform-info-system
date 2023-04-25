@@ -36,20 +36,13 @@ station/<station-short-code>/<platform-number>/<transit>/<transport-type>
 > Transport type: **Commuter** or **Long-distance**
 
 > **Outputs a JSON string:**  [{stationFullName, schedule: [{Train:[trainNumber, trainType, trainCategory, commuterLineID, timetable: [destination, type, cancelled, scheduledTime, differenceInMinutes, liveEstimateTime, commercialTrack, trainStopping, cause, stops_on_stations:[]]]}]}]
->
-
-Topic for non stopping trains at a platform  
-```sh  
-station/<station-short-code>/<platform-number>/passing  
-```  
-> **Outputs a JSON string:** > {station, trains: [track, scheduledTime]}  
 >   
 Topic for announcements in a station
 ```sh  
 announcements/<notify-type>/<station-code>/<platform-id>
 ```  
 
-> Notify type: **info**, **alert** or **infoview** 
+> Notify type: **info**, **alert**, **infoview** or **passing** 
 
 Topic for device communication
 ```sh  
@@ -141,3 +134,32 @@ python3 display_client.py -view <display_view> -s <station_short_code> -p <platf
 > -view "splitview" requires parameters -s, -left, -right but -transit and -transport are optional\  
 > -view "platformview" requires parameters -s and -p but -transit and -transport are optional\  
 > -view "infoview" requires only the parameter -s
+
+## Screenshots
+
+<table>
+  <tr>
+  	<td align="center">
+      <img src="doc/screenshots/Tableview.jpg" alt="Tableview" width="500"/>
+    </td>
+    <td align="center">
+      <img src="doc/screenshots/Infoview.jpg" alt="Infoview" width="500"/>
+    </td>
+  </tr>
+  <tr>
+  	<td align="center">
+      <img src="doc/screenshots/Platformview.jpg" alt="Platformview" width="500"/>
+    </td>
+    <td align="center">
+      <img src="doc/screenshots/Splitview.jpg" alt="Splitview" width="500"/>
+    </td>
+  </tr>
+  <tr>
+  	<td align="center">
+      <img src="doc/screenshots/Passing_train.jpg" alt="Passing_train" width="500"/>
+    </td>
+    <td align="center">
+      <img src="doc/screenshots/Manager.jpg" alt="Manager" width="500"/>
+    </td>
+  </tr>
+</table>

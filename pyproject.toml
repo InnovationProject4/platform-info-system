@@ -1,7 +1,70 @@
 [build-system]
-requires = ["setuptools", "wheel", "setuptools_scm"]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
+
+[project]
+name = "platform-info-system"
+authors = [
+    {name = "Samuel Laisaar", email = "samuel.laisaar@metropolia.fi"},
+    {name = "Leevi Laaksonen", email = "leevi.laaksonen@metropolia.fi"},
+    {name = "Leo Lehtiö", email = "leo.lehtio@metropolia.fi"},
+    {name = "Alexander Liski", email = "aleksandr.liski@metropolia.fi"},
+
+]
+description = "Railway passenger information display system"
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = ["platform", "railway", "passenger", "display"]
+license = {text = "BSD-3-Clause"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX :: Linux",
+]
+
+dependencies = [
+    "certifi~=2022.12.7",
+    'charset-normalizer~=3.1.0',
+    'idna~=3.4',
+    'paho-mqtt~=1.6.1',
+    'pytz~=2022.7.1',
+    'requests~=2.28.2',
+    'tabulate>=0.9.0',
+    'urllib3~=1.26.14',
+    'pyopenssl~=23.1.1'
+]
+
+
+dynamic = ["version"]
+
+[project.urls]
+"Source Code" = "https://github.com/InnovationProject4/platform-info-system/tree/main/" 
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["pis*"]
+exclude = ["examples*"]
+
+[project.scripts]
+pis = "pis.install.wizard:main"
+demo = "pis.DEM:main"
+
+[project.gui-scripts]
+pis-display = "pis.display_client:main"
+pis-aggregator = "pis.aggregator:main"
+
+
+[project.optional-dependencies]
+test = [
+    "pytest-cov ~=3.0.0",
+]
+
+
+[tool.coverage.run]
+source = ["src"]
+
+[tool.setuptools_scm]
 
 [tool.black]
 exclude = '''
@@ -14,6 +77,7 @@ exclude = '''
     | \.tox
     | \.venv
     | _build
+    | build
     | buck-out
     | dist
     | esys_binding.py

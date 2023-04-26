@@ -1,4 +1,8 @@
 from pis.dashboard import root
 
-if __name__ == '__main__':
+def main():
     root.createRoot().mainloop()
+    
+
+if __name__ == '__main__':
+    main()

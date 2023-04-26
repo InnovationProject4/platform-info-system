@@ -2,9 +2,24 @@
 
 import os, shutil, subprocess
 
-INSTALL_DIR = '/opt/pids'
-CONFIG_FILE = '/etc/pids/config.ini'
 SERVICE_PATH = '/etc/systemd/system/'
+
+APP_NAME = 'pids'
+CONFIG_INI = 'config.ini'
+ENC_NAME = 'private.pfx'
+
+
+if os.path.exists('/usr/local/etc') and os.path.isdir('/usr/local/etc/' + APP_NAME):
+    path = f'/usr/local/etc/{APP_NAME}/'
+elif os.path.exists('/etc') and os.path.isdir('/etc/' + APP_NAME):
+    path = f'/etc/{APP_NAME}/'
+elif os.path.exists(f'{os.environ["HOME"]}/.local') and os.path.isdir(f'{os.environ["HOME"]}/.local/share/' + APP_NAME):
+    path = f'{os.environ["HOME"]}/.local/share/{APP_NAME}/'  # fallback to /usr/local/etc if neither directory exists
+else:
+    path = f'/.{APP_NAME}/'  # fallback to /home/.<app_name> if none of the directories are available
+    
+CONFIG_PATH = path
+
 
 def del_dir_if_exists(directory):
     if os.path.exists(directory):
@@ -24,8 +39,8 @@ def systemd_kill_service(service_file, service_name):
         print(f'service file {service_file} does not exist.')
         
 
-del_dir_if_exists(INSTALL_DIR)
-del_dir_if_exists(CONFIG_FILE)
+
+del_dir_if_exists(CONFIG_PATH)
 
 
 files = os.listdir(SERVICE_PATH)

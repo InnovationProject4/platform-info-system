@@ -48,11 +48,11 @@ exclude = ["examples*"]
 
 [project.scripts]
 pis = "pis.install.wizard:main"
-demo = "pis.DEM:main"
 
 [project.gui-scripts]
 pis-display = "pis.display_client:main"
 pis-aggregator = "pis.aggregator:main"
+pis-dashboard = "pis.manager_client:main"
 
 
 [project.optional-dependencies]

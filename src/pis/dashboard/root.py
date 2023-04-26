@@ -1,5 +1,5 @@
 import tkinter as tk
-from dashboard import log, announcement_manager, infodisplay_manager, controller
+from pis.dashboard import log, announcement_manager, infodisplay_manager, controller
 
 
 def createRoot():

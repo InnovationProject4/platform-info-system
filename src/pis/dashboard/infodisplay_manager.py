@@ -1,5 +1,5 @@
 import tkinter as tk
-import dashboard.controller as controller
+import pis.dashboard.controller as controller
 
 infodisplay_canvas_data = []
 

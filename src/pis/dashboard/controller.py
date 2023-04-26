@@ -5,7 +5,7 @@ import sqlite3
 import tkinter as tk
 import uuid
 
-from messaging.telemetry import Connection
+from pis.messaging.telemetry import Connection
 
 
 

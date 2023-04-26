@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-import dashboard.controller as controller
+import pis.dashboard.controller as controller
 
 announcement_canvas_data = []
 

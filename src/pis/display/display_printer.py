@@ -39,9 +39,6 @@ def convertUTCtoEET(time):
     date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
     dt_utc = pytz.timezone("UTC").localize(datetime.strptime(time, date_format))
     dt_helsinki = dt_utc.astimezone(pytz.timezone("Europe/Helsinki"))
-    if dt_helsinki.second >= 30:  # Round up seconds if 30 or greater
-        dt_helsinki += datetime.timedelta(minutes=1)
-    dt_helsinki = dt_helsinki.replace(second=0, microsecond=0)  # Round down seconds to 00
     return dt_helsinki.strftime('%H:%M')
 
 

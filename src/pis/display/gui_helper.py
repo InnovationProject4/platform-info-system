@@ -295,3 +295,63 @@ class ToastMessage(Toplevel):
             self.Y = instance.winfo_y() + instance.winfo_height()
             instance.geometry('+%d+%d' % (instance.master.winfo_x(), self.Y))
             instance.update()
+
+
+class VerticalScrollText(Canvas):
+    """Scroll text vertically in a canvas when text overflows the canvas height"""
+    def __init__(self, parent, text, fg, bg, justify, offsetx=0, offsety=0, speed=100, font=('Calibri Light', 15)):
+        """
+        Args:
+            parent (tk.Root): A parent widget
+            text (str): string or label to be displayed
+            width (int, optional): width of widget and overflow limit. Defaults to 400.
+            height (int, optional): height of widget and overflow limit. Defaults to 200.
+            offsetx (int, optional): text offset position x coord. Defaults to 0.
+            offsety (int, optional): text offset position y coord. Defaults to 0.
+            speed (int, optional): Scrolling speed, smaller is faster. Defaults to 50.
+        """
+        super().__init__(parent, bg=bg, highlightthickness=0)
+        self.update_idletasks()
+        self.h = int(self.cget("height"))
+        self.x = offsetx
+        self.y = offsety
+        self.speed = speed
+        self.parent = parent
+        self._animate = False
+        
+        
+        
+        self.text = self.create_text(offsetx, self.h+offsety, anchor="nw", text=text, font=font, fill=fg, justify=justify)
+        #self.overflow_check()
+        
+    def overflow_check(self):
+        cheight = int(self.cget("height"))
+        bbox = self.bbox(self.text)
+        th = bbox[3] - bbox[1]
+        
+        #on overflow animate scrolling
+        if th > cheight:
+            self._animate = True
+            self.scroll_text()   
+        else:
+            self._animate = False
+            self.move(self.text, 0, -cheight) 
+        
+    def scroll_text(self):
+        self.move(self.text, 0, -1) 
+        canvas_y = self.coords(self.text)[1] 
+        if self.bbox(self.text)[3] == 0:  
+            self.move(self.text, 0, self.h + self.y + abs(canvas_y))  # Move the text back to the bottom of the canvas
+        self.parent.after(self.speed, self.scroll_text)
+        
+        
+    def update_text(self, new_text):
+        self.itemconfigure(self.text, text=new_text)
+        
+        self.overflow_check()
+        
+        
+    def resize_font(self, font):
+        self.itemconfigure(self.text, font=font)
+        
+        

@@ -69,8 +69,11 @@ class App(threading.Thread):
         train_label.grid(row=0, column=2, sticky="NSEW", padx=(0, 200))
         dp.reactive_train_data.watch(lambda: gui_helper.updateLabels(dp.reactive_train_data.value[0][2], train_label))
 
-        stops_label = Label(main_frame, text="", fg='white', bg='#061f36', anchor='w', justify=LEFT, font=('Calibri Light', 15))
-        stops_label.grid(row=1, column=2, rowspan=5, sticky="NSEW")
+        #stops_label = Label(main_frame, text="", fg='white', bg='#061f36', anchor='w', justify=LEFT, font=('Calibri Light', 15))
+        #stops_label.grid(row=1, column=2, rowspan=5, sticky="NSEW")
+        
+        stops_canvas = gui_helper.VerticalScrollText(main_frame, "", fg='white', bg='#061f36', justify=LEFT, font=('Calibri Light', 15))
+        stops_canvas.grid(row=1, column=2, rowspan=5, sticky="NSEW")
         dp.reactive_train_data.watch(lambda: updateStopsOnStations())
 
         announcement_label = Label(self.root, text="", fg='white', bg='#0a4a70', font=('Calibri Light', 15))
@@ -107,10 +110,12 @@ class App(threading.Thread):
 
         def updateStopsOnStations():
             text = ""
-            five_stations = dp.reactive_train_data.value[0][5][:5]
-            for station in five_stations:
-                text += "  ◦ " + station + "\n"
-            stops_label.config(text=text)
+            for station in dp.reactive_train_data.value[0][5]:
+                text += "  ◦ " + station + "\n  ┃\n"
+            #stops_label.config(text=text)
+            text = text[:-3]
+            
+            stops_canvas.update_text(text)
 
         def updateScreen():
             dp.checkPassingTrain()
@@ -126,7 +131,8 @@ class App(threading.Thread):
             arrive_label['font'] = ('Calibri Light', sizes['lg'])
             destination_label['font'] = ('Calibri Light', sizes['xxl'])
             train_label['font'] = ('Calibri Light', sizes['xxl'])
-            stops_label['font'] = ('Calibri Light', sizes['md'])
+            #stops_label['font'] = ('Calibri Light', sizes['md'])
+            stops_canvas.resize_font(('Calibri Light', sizes['md']))
 
         top_frame.grid(row=0, column=0, sticky="NSEW")
         warning_frame.grid(row=1, column=0, sticky="NSEW")

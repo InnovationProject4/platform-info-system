@@ -13,6 +13,10 @@ The goal of this project is to develop a train station display board system.
   
 The management node which is running the aggregator retrieves rail traffic data from Digitraffic's services and uses MQTT protocol to distribute the data to different topics which the displays at railway station's can subscribe. In the display's implementation the data is then validated, formatted and then displayed in with a GUI.
 
+### System overview
+![data flow diagram](doc/diagrams/system_overview.png)  
+
+### Sequence diagram
 ![data flow diagram](doc/diagrams/Sequence_diagram.png)  
   
 > - Sequence starts asynchronously from steps 1 to 2
@@ -51,7 +55,7 @@ management/<display-id>/update
 > Subtopic **"update"** not mandatory and is used only for notifying the aggregator to publish data from a database
 ## Installation  
   
-For running the build on Linux:
+For running the build on Linux (ubuntu, raspbian):
 
 Before installing anything make sure operating system is up to date.
 
@@ -59,47 +63,17 @@ Check that your python version is at least 3.9
 ```sh  
 python3 --version
 ```
-Make sure you have git and pip3 installed
+Make sure you have git and pip installed
 ```sh  
 sudo apt-get update
 sudo apt install git 
 sudo apt install python3-pip
 ```  
-Clone the repository with git  
-```sh  
-git clone https://github.com/InnovationProject4/platform-info-system  
-```  
-Navigate to the "build" folder
-  ```sh  
-cd platform-info-system/build
-```  
-Install the requirements.txt file with pip3
-```sh  
-pip3 install -r requirements.txt  
-```  
+
 If your python doesn't come with built-in tkinter package install it
 ```sh  
 sudo apt-get install python3-tk
 ```  
-  
-Edit the config.ini file for MQTT brokers IP and port. Also, if your device is running displays you can choose
-to have it full screen or windowed.
-```sh  
-[mqtt-broker]
-ip = localhost (Type in the brokers IP)
-port = 1883 (Type in the brokers port)
-
-[sqlite]
-repository = database.db
-
-[display]
-fullscreen = 1 (1 = full screen, 0 = windowed)
-
-[validation]
-token = *HIDDEN*
-```  
-### Management Node
-
 Install Eclipse Mosquitto  
 ```sh  
 sudo apt-add-repository ppa:mosquitto-dev/mosquitto-ppa  
@@ -111,29 +85,87 @@ Start the broker
 ```sh  
 mosquitto  
 ```  
-  
-The aggregator can be executed with the command:  
-```sh  
-python3 aggregator.py -s <station_short_code(s)> -g <>
-```  
-> Aggregation of several stations is possible if you separate them with spaces. \
-> Adding the -g argument opens up a gui for the aggregator.
+### With pip:
 
-The display manager can be executed with the command:  
+It's recommended to use a Python virtual environment
+So create one and activate it
 ```sh  
-python3 manager_client.py  
-```
-### Displays  
-  
-The display can be executed with the command:  
-```sh  
-python3 display_client.py -view <display_view> -s <station_short_code> -p <platform> -left <platform> -right <platform> -transit<transit> -transport<transport>  
+python3 -m venv develop
+source develop/bin/activate 
 ```  
-> Here is an explanation of the different parameters:\  
-> -view "tableview" requires the parameter -s but -p, -transit and -transport are optional\  
-> -view "splitview" requires parameters -s, -left, -right but -transit and -transport are optional\  
-> -view "platformview" requires parameters -s and -p but -transit and -transport are optional\  
-> -view "infoview" requires only the parameter -s
+Install the program with pip
+```sh  
+python3 -m pip install git+https://github.com/InnovationProject4/platform-info-system.git
+```  
+After the installation initialize the necessary config files:
+```sh  
+pis init
+```
+#### Starting up the wizard
+```sh  
+pis
+```
+> With the wizard you can
+> - Start the display and aggregator with easy step by step instructions
+> - Edit the configuration file that includes the brokers IP, port and option to run displays on fullscreen
+> - Uninstall the program
+
+#### Starting up the manager
+```sh  
+pis-dashboard
+```
+#### Starting up the display
+```sh  
+pis-display -view <display_view> -s <station_short_code> -p <platform> -left <platform> -right <platform> -transit<transit> -transport<transport>
+```
+> Explanation for the arguments:  
+> -view "tableview" requires the argument -s but -p, -transit and -transport are optional  
+> -view "splitview" requires arguments -s, -left, -right but -transit and -transport are optional  
+> -view "platformview" requires arguments -s and -p but -transit and -transport are optional  
+> -view "infoview" requires only the argument -s\
+> -transit accepts either "departures" or "arrivals"\
+> -transport accepts either "commuter" or "long_distance" 
+#### Starting up the aggregator
+```sh  
+pis-aggregator <station_short_code> <station_short_code> ...
+```  
+> Aggregation of several stations is possible if you separate them with spaces.
+### With git clone:
+
+Clone the repository with git  
+```sh  
+git clone https://github.com/InnovationProject4/platform-info-system  
+```  
+Navigate to the "src" folder
+```sh  
+cd platform-info-system/src
+```  
+Set up an environment variable
+```sh  
+export PYTHONPATH=pis/:$PYTHONPATH
+```  
+initialize the necessary config files:
+```sh  
+python3 pis/install/wizard.py init
+```
+#### Starting up the wizard
+```sh  
+python3 pis/install/wizard.py
+```
+#### Starting up the manager
+```sh  
+python3 pis/manager_client.py
+```
+#### Starting up the aggregator
+```sh  
+python3 pis/aggregator.py <station_short_code> <station_short_code> ...
+```
+#### Starting up the display
+```sh  
+python3 pis/display_client.py -view <display_view> -s <station_short_code> -p <platform> -left <platform> -right <platform> -transit<transit> -transport<transport>
+```
+
+> See the installation "with pip" for explanation for all the arguments
 
 ## Screenshots
 

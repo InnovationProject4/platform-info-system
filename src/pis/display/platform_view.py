@@ -107,7 +107,8 @@ class App(threading.Thread):
 
         def updateStopsOnStations():
             text = ""
-            for station in dp.reactive_train_data.value[0][5]:
+            five_stations = dp.reactive_train_data.value[0][5][:5]
+            for station in five_stations:
                 text += "  ◦ " + station + "\n"
             stops_label.config(text=text)
 

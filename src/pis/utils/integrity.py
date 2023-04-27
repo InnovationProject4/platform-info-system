@@ -37,9 +37,6 @@ from OpenSSL.crypto import (
 )
 
 
-config = Conf().config
-
-
 def keygen():
     """Generate RSA 2048 public-private pair with keylength of 2048
 
@@ -81,7 +78,7 @@ def dump(key, cert, password, enc_file, config_file):
         enc_file (str): path to encrypted file
         config_file (str): path to config file
     """
-    
+    config = Conf().config
     if 'validation' not in config.sections():
         config.add_section('validation')
     
@@ -92,13 +89,14 @@ def dump(key, cert, password, enc_file, config_file):
     
     digest = binascii.hexlify(pkcs12.export(passphrase=password.encode()))
     config.set('validation', 'token', password)
+
     
     try: 
+        with open(config_file, "w") as ef:
+            config.write(ef)
+            
         with open(enc_file, "wb") as f:
             f.write(digest)
-        
-        with open(config_file, "w") as f:
-            config.write(f)
     except IOError as ex:
         print(f"Failed to write to {config_file}/{enc_file}", ex)
     

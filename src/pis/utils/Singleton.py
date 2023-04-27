@@ -33,7 +33,6 @@ class _Singleton:
                 # instance is still nonexistent.
                 if not cls._instance:
                     cls._instance = super().__new__(cls)
-                    print("_singleton invoked")
         return cls._instance
 
 '''

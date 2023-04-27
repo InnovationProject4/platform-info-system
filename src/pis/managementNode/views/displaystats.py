@@ -11,14 +11,14 @@ import math, time, datetime, configparser
 
 conf.Conf()
 
-conn = Connection(conf.ADDR, 1883)
+conn = Connection(conf.ADDR, conf.PORT)
 
 
 attached=None
 
 class DeviceMonitoring(Viewport, ):
     '''
-    Attaches to Management Node and monitors displays
+    Monitors displays and their connection behaviour
     '''
     
     #plugin
@@ -30,7 +30,7 @@ class DeviceMonitoring(Viewport, ):
        return plugin
    
     def __init__(self, parent, width=100, height=100, *args, **kwargs):
-        super().__init__(parent, bg="red",width=width, height=height, *args, **kwargs)
+        super().__init__(parent, bg="black",width=width, height=height, *args, **kwargs)
         
         self.displays = {}
         
@@ -73,7 +73,7 @@ class DeviceMonitoring(Viewport, ):
     
     def widgets(self):
         
-        label = PluginLabel(self, "hello world")
+        label = PluginLabel(self, "Device Monitor")
         label.pack()
         
         
@@ -127,14 +127,9 @@ class DeviceMonitoring(Viewport, ):
 
 
 class PluginLabel(tk.Frame):
-    def __init__(self, parent, plugin_name, plugin_description="KEK"):
+    def __init__(self, parent, plugin_description=""):
         super().__init__(parent)
-        
-        self.plugin_name = plugin_name
+    
         self.plugin_description = plugin_description
-        
-        self.label_name = tk.Label(self, text=self.plugin_name, font=("Arial", 14))
         self.label_description = tk.Label(self, text=self.plugin_description, font=("Arial", 10), wraplength=200)
-        
-        self.label_name.pack(side=tk.TOP)
         self.label_description.pack(side=tk.BOTTOM)

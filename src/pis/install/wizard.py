@@ -3,7 +3,7 @@
 import os, sys, shutil, subprocess, re, hashlib, argparse
 from pis.install import stationCodes
 from tabulate import tabulate
-from pis.utils.conf import Conf, ENC_PATH, CONFIG_PATH
+import pis.utils.conf as conf
 
 '''
 Management wizard for passenger information system.
@@ -336,9 +336,10 @@ def generate_validation_keys(pfk, config, integrity, after=None):
             if not config.has_section("validation"):
                 config.add_section("validation")
             
-            config.set("validation", "token", str(pfk))
+            config.set("validation", "token", pfk.hex())
         
-        integrity.dump(pfx, cert, str(pfk), ENC_PATH, CONFIG_PATH)
+        
+        integrity.dump(pfx, cert, pfk.hex(), conf.ENC_PATH, conf.CONFIG_PATH)
         
         clear(after=after)
         print(color("Keys were successfully generated and added!", "green"))
@@ -576,7 +577,7 @@ def run_aggregator_wizard():
 def run_config_wizard():
     dirty=False
     
-    config = Conf().config
+    config = conf.Conf().config
     
     def banner():
         print("Configuration Wizard!", end="\n")
@@ -592,7 +593,7 @@ def run_config_wizard():
             ["save", "commit and save all changes"],
             ["exit", "save modified config and exit the wizard"],
             ["help", "show this banner"],
-            [color("config location", "purple"), color(f"{ CONFIG_PATH }", "purple")],
+            [color("config location", "purple"), color(f"{ conf.CONFIG_PATH }", "purple")],
         ], headers="firstrow"))
         if dirty:
             print(color("There are unsaved changes in config awaiting for user action.", "blue"))
@@ -609,7 +610,7 @@ def run_config_wizard():
                 response = prompt_option(color("Config buffer was modified. Save changes?", "yellow"), y="yes", n="no")
                 if response == "y":
                     try:
-                        with open(CONFIG_PATH, "w") as f:
+                        with open(conf.CONFIG_PATH, "w") as f:
                             config.write(f)
                         dirty=False
                         clear(after=banner)
@@ -622,7 +623,7 @@ def run_config_wizard():
             response = prompt_option(color("Save changes?", "yellow"), y="yes", n="no")
             if response =="y":
                 try:
-                    with open(CONFIG_PATH, "w") as f:
+                    with open(conf.CONFIG_PATH, "w") as f:
                         config.write(f)
                     dirty=False
                     clear(after=banner)
@@ -642,7 +643,7 @@ def run_config_wizard():
                 print(color("Error: No key or value was given!", "red"))
                 continue
             
-            group = grep(str(key[0]), CONFIG_PATH)
+            group = grep(str(key[0]), conf.CONFIG_PATH)
             if group:
                 print()
                 for i in group:
@@ -761,12 +762,12 @@ def run_config_wizard():
                 
                 pfk = None
                 
-                if config.has_section("validation") and os.path.exists(ENC_PATH):
+                if config.has_section("validation") and os.path.exists(conf.ENC_PATH):
                     print(color("Warning: Validation uses encrypted storage. Enter the current password on existing validation key.", "red"))
                     
                     new_token = False
                     pfk = hashlib.sha256(prompt_password("Enter password: ").encode()).digest()
-                    k, _ = integrity.load(ENC_PATH, str(pfk))
+                    k, _ = integrity.load(conf.ENC_PATH, pfk.hex())
                    
                     if not k:
                         print(color("Error: Verification failed: Invalid password!", "red"))
@@ -784,7 +785,6 @@ def run_config_wizard():
                     pfk = prompt_confirmpassword()
                         
                 clear()
-                print("generating validation keys...")
                 generate_validation_keys(pfk, config, integrity, after=banner)
                 
                 

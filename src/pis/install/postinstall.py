@@ -15,7 +15,7 @@ if os.name == "posix":
             os.makedirs(f'/usr/local/etc/{APP_NAME}', exist_ok=True)
         path = f'/usr/local/etc/{APP_NAME}/'
         
-    elif os.path.exists('/etc') and os.access('/usr/local/etc', os.W_OK):
+    elif os.path.exists('/etc') and os.access('/etc', os.W_OK):
         if os.path.isdir('/etc/' + APP_NAME):
             print("Creating directory: /etc/" + APP_NAME)
             os.makedirs(f'/etc/{APP_NAME}', exist_ok=True)
@@ -73,7 +73,7 @@ def prompt(help, **kwargs):
 def find_mqtt_ip():
     # Attempt to locate the ip of the mosquitto broker, otherwise use default ip and customize later
     ip = ''
-    default = '192.168.0.24'
+    default = 'localhost'
     
     try:
          sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

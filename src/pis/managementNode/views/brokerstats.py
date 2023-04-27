@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 
-from utils.tkui import Viewport
-from messaging.telemetry import Connection
-from utils.Event import Reactive
+from pis.utils.tkui import Viewport
+from pis.messaging.telemetry import Connection
+from pis.utils.Event import Reactive
+from pis.utils.conf import Conf
 
-import utils.chart as chart
+import pis.utils.chart as chart
 
 import time, math
 
@@ -63,9 +64,6 @@ class MessageStatsView(Viewport):
             ("$SYS/broker/messages/sent", lambda client, userdata, message: (
                 self.sent_aggregation(message.payload)
             ) )
-            
-        
-          
              
         ])
         

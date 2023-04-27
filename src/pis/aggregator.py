@@ -1,6 +1,6 @@
 from pis.managementNode.manager3 import Manager
 from pis.utils import tkui, conf
-# from managementNode.views.brokerstats import MessageStatsView, MessageRateGauge
+from pis.managementNode.views.brokerstats import MessageStatsView, MessageRateGauge
 from pis.managementNode.views.displaystats import DeviceMonitoring
 import time, argparse, threading, traceback
 
@@ -20,7 +20,8 @@ def main():
     if args.gui:
         thread = threading.Thread(target=lambda:(
             app := tkui.App(plugins=[
-                DeviceMonitoring
+                DeviceMonitoring,
+                MessageStatsView
             ]),
             
             ## Make default viewport

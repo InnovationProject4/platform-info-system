@@ -120,6 +120,7 @@ class SplashTriangle(Toplevel):
         self.overrideredirect(True)
         self.attributes('-topmost', True)
         self.withdraw()
+        self.update_idletasks()
 
         self.geometry('+%d+%d' % (parent.winfo_x(), parent.winfo_y()))
         self.update_idletasks()

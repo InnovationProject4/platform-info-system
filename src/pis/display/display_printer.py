@@ -34,7 +34,6 @@ topic_info_dict = {
     "view": ""
 }
 
-
 def convertUTCtoEET(time):
     date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
     dt_utc = pytz.timezone("UTC").localize(datetime.strptime(time, date_format))
@@ -117,8 +116,6 @@ def formatTrainData(trains, reactive_trains):
         t.bulk_insert(popped, lambda x: x['scheduledTime'])
 
     sorted = query.select_nodes(t.traverse, 10)
-
-    print(sorted)
 
     formatted_train_data = []
     for train in sorted:

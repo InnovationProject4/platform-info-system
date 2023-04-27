@@ -44,7 +44,7 @@ def main():
             manager.trains.send()
             for station in args.stations:
                 manager.publish_passing_train_data(station)
-            time.sleep(60)
+            time.sleep(10)
     except:
         traceback.print_exc()
     finally:

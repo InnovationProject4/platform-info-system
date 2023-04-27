@@ -216,8 +216,7 @@ class Manager:
                 next_stops.append(self.get_full_stationname(stop['stationShortCode']))
                 
             s['stopOnStations'] = next_stops
-                
-                
+                   
             # Some trains have special destination labels in HSL
             #check kehäjuna and check if destination should be LEN (if it hasn't passed airport yet)
             LEN = query.select(schedules.traverse(), "stationShortCode", stationShortCode="LEN", type="ARRIVAL", trainNumber=trainNumber, scheduledTime= lambda x : x > s['scheduledTime'])
@@ -257,7 +256,8 @@ class Manager:
         ))
         
         
-        
+        #trains.get() returns JSON-object of trains with schedules.
+        #Smaller stations with lower traffic may need more minutes to have enough trains to show
         self.trains = rata.Batch()
         for station in self.targets:
             self.trains.get(f'live-trains/station/{station}', payload={

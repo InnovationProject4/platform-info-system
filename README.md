@@ -108,6 +108,7 @@ pis
 > With the wizard you can
 > - Start the display and aggregator with easy step by step instructions
 > - Edit the configuration file that includes the brokers IP, port and option to run displays on fullscreen
+> - Generate and manage validation keys
 > - Uninstall the program
 
 #### Starting up the manager

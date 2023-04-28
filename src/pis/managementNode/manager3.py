@@ -39,7 +39,7 @@ class Manager:
             ("management", lambda client, userdata, message : (
                 payload := json.loads(message.payload.decode('utf-8')),
                 print("A device handshake from ", payload['event']),
-                self.register_display(payload) if payload['event'] == 'startup' else self.shutdown_signal(payload) if payload['event'] == 'shutdown' else None
+                self.register_display(payload) if payload['event'] == 'startup' else self.shutdown_signal(payload) if payload['event'] == 'disconnected' else None
             )),
             
             
@@ -56,6 +56,7 @@ class Manager:
             "messageTimeStamp": datetime.timestamp(datetime.now())
         }))
 
+    @observable
     def get_displayinfo(self):
         """Get the display information from the database."""
         with PersistentConnection() as (conn, cur):
@@ -79,11 +80,11 @@ class Manager:
 
 
 
-    def shutdown_signal():
+    def shutdown_signal(payload):
         '''   Display notified that it is shutting down and no longer active. '''
+        print("A device shutdown from ", payload['event'], payload["message"])
         
 
-    @observable
     def register_display(self, data):
         '''
             when manager receives "startup" event, it attempts to save the information from the display and send back 'ack' event message (Acknowledged).

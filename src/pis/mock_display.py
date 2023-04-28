@@ -67,7 +67,7 @@ class Client:
         self.conn.set_user_data(json.dumps(message))
         self.conn.subscribe_multiple([
         
-            ("station/PSL/#", lambda res, user, message:(
+            ("station/EPO/#", lambda res, user, message:(
                 print("DATA STATION"),
                 print(message.topic),
                 print(message.payload.decode()),
@@ -133,23 +133,20 @@ class Client:
         
     
    
-
-
-
-if __name__ == '__main__':
-
+def main():
     try:
-        
-       
         client = Client()
         client.connect()
-        
         while True: time.sleep(100)
        
         
     except Exception as ex:
         print(ex)
         client.conn.disconnect()
+
+
+if __name__ == '__main__':
+    main()
         
         
        

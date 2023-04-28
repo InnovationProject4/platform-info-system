@@ -37,6 +37,7 @@ class MessageStatsView(Viewport):
         
         self.messages_received = Reactive(0)
         self.messages_sent = Reactive(0)
+        self.peak = 1
         
         self.messages_sent_plot = []
         self.messages_received_plot = []
@@ -70,38 +71,62 @@ class MessageStatsView(Viewport):
 
     def received_aggregation(self, payload):
         num_messages = int(payload.decode())
-        self.messages_received.value = num_messages
         
         now = time.time() // 60
-        self.messages_received_plot.append((now, num_messages))
+        #self.messages_received_plot.append((now, num_messages))
+        if len(self.messages_received_plot) > 0:
+            dt = num_messages - self.messages_received.value
+        else:
+            dt = 0
+            
+        self.peak = max(dt, self.peak)
+        
+        self.messages_received.value = num_messages    
+        self.messages_received_plot.append((now, dt))
+        
         
         # remove data points older than 60 minutes
         while len(self.messages_received_plot) > 0 and now - self.messages_received_plot[0][0] > 60:
             self.messages_received_plot.pop(0)
             
-            
-        self.received_line.set_data([d[0] for d in self.messages_received_plot], [d[1] for d in self.messages_received_plot])
-        self.ax.relim()
-        self.ax.autoscale_view(True, True, True)
-        self.canvas.draw()
+        
+        self.chart.max_value = self.peak
+        self.chart.update_labels()
+        self.chart.render(line=self.received_line, values=[dt])
+        #self.received_line.set_data([d[0] for d in self.messages_received_plot], [d[1] for d in self.messages_received_plot])
+        #self.ax.relim()
+        #self.ax.autoscale_view(True, True, True)
+        #self.canvas.draw()
 
         
     def sent_aggregation(self, payload):
         num_messages = int(payload.decode())
-        self.messages_sent.value = num_messages
+        
         
         now = time.time() // 60
-        self.messages_sent_plot.append((now, num_messages))
+        
+        if len(self.messages_sent_plot) > 0:
+            dt = num_messages - self.messages_sent.value
+        else:
+            dt = 0
+            
+        self.peak = max(dt, self.peak)
+        
+        self.messages_sent.value = num_messages
+        self.messages_sent_plot.append((now, dt))
         
         # remove data points older than 60 minutes
         while len(self.messages_sent_plot) > 0 and now - self.messages_sent_plot[0][0] > 60:
             self.messages_sent_plot.pop(0)
         
-
-        self.sent_line.set_data([d[0] for d in self.messages_sent_plot], [d[1] for d in self.messages_sent_plot])
-        self.ax.relim()
-        self.ax.autoscale_view(True, True, True)
-        self.canvas.draw()
+        
+        self.chart.max_value = self.peak
+        self.chart.update_labels()
+        self.chart.render(line=self.sent_line, values=[dt])
+        #self.sent_line.set_data([d[0] for d in self.messages_sent_plot], [d[1] for d in self.messages_sent_plot])
+        #self.ax.relim()
+        #self.ax.autoscale_view(True, True, True)
+        #self.canvas.draw()
         
     
     def message_widgets(self):
@@ -128,13 +153,15 @@ class MessageStatsView(Viewport):
             self, width=600, height=400, hbar_size=5, vbar_size=5,
             hbar_fg="#101010", vbar_fg="#444444", sections_fg="#444444", 
             text_color="red", font=('arial', 8, 'bold'),
-            sections=True, sections_count=10, max_value=100,
+            sections=True, sections_count=10, max_value=2000000,
             labels=True, labels_count=10, line_len=20,
             left=10, right=10, bottom=40, top=40,
             x=0, y=0
         )
         
         self.chart.pack(fill=tk.BOTH, expand=True)
+        self.received_line = chart.Line(parent=self.chart,height=3, color='blue')
+        self.sent_line = chart.Line(parent=self.chart,height=3, color='red')
     
         
         return self

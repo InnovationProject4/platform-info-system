@@ -57,8 +57,8 @@ class DeviceMonitoring(Viewport, ):
             last_message = datetime.datetime.fromtimestamp(last_message).replace(microsecond=0)
             first_message = datetime.datetime.fromtimestamp(first_message).replace(microsecond=0)
             
-            if not dt_pre <= last_message <= dt_post:
-                status = "untrusted"
+            #if not dt_pre <= last_message <= dt_post:
+            #    status = "untrusted"
             
             tuple =  display[:3] + (last_message, first_message, status)
             

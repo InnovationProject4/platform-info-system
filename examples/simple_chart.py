@@ -1,4 +1,4 @@
-import utils.chart as chart
+import pis.utils.chart as chart
 import tkinter as tk
 import random
 
@@ -31,7 +31,7 @@ def simple_chart():
 
 
 def s_chart():
-    datachart = chart.LineChart(root, width=600, height=400, hbar_size=5, vbar_size=5,
+    datachart = chart.LineChart(root, width=600, height=200, hbar_size=5, vbar_size=5,
                        hbar_fg="#101010", vbar_fg="#444444", sections_fg="#444444", 
                        text_color="red", font=('arial', 8, 'bold'),
                        sections=True, sections_count=10, max_value=100,

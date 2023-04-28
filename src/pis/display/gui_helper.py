@@ -317,7 +317,7 @@ class VerticalScrollText(Canvas):
         self.y = offsety
         self.speed = speed
         self.parent = parent
-        self._animate = False
+        self._animate = True
         
         
         
@@ -334,8 +334,9 @@ class VerticalScrollText(Canvas):
             self._animate = True
             self.scroll_text()   
         else:
-            self._animate = False
-            self.move(self.text, 0, -cheight) 
+            if self._animate:
+                self._animate = False
+                self.move(self.text, 0, -cheight) 
         
     def scroll_text(self):
         self.move(self.text, 0, -1) 

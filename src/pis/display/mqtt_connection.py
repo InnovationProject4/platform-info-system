@@ -28,6 +28,7 @@ last_will_message = json.dumps({
 def startup():
     '''  establish connection and send startup message im plain json'''
     
+    conn.set_last_will("management", last_will_message, 0)
     conn.publish("management",
         json.dumps({
             "event": "startup",

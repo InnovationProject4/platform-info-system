@@ -81,7 +81,6 @@ def printPassingTrainOnDisplay(msg):
         if len(parsed['trains']) >= 1:
             global passing_train_time
             passing_train_time = parsed['trains'][0]['scheduledTime']
-            print(passing_train_time)
     except Exception as e:
         print("Error decoding passing train JSON ", e)
 

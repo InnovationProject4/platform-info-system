@@ -206,7 +206,6 @@ def dbClearAnnouncements():
 
     # delete all announcements
     cursor.execute("DELETE FROM announcements")
-    print(topics)
     # insert an empty announcement for each topic
     for topic in topics:
         cursor.execute("INSERT INTO announcements (topic_id, announcement) VALUES (?, '')",
@@ -220,7 +219,6 @@ def dbClearAnnouncements():
 def dbGetAll():
     cursor.execute('SELECT * FROM topics JOIN announcements ON topics.id = announcements.topic_id')
     result_set = cursor.fetchall()
-    print(result_set)
 
     topics = {}
     # groups the announcements by topic

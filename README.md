@@ -181,7 +181,7 @@ python3 pis/display_client.py -view <display_view> -s <station_short_code> -p <p
   </tr>
   <tr>
   	<td align="center">
-      <img src="doc/screenshots/Platformview.jpg" alt="Platformview" width="500"/>
+      <img src="doc/screenshots/Platformview.png" alt="Platformview" width="500"/>
     </td>
     <td align="center">
       <img src="doc/screenshots/Splitview.jpg" alt="Splitview" width="500"/>

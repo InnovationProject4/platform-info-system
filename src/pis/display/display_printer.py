@@ -47,12 +47,15 @@ def toast(message):
 
 
 def verify(topic, message):
-    '''Verify the integrity of data and extract the message, else return None'''
-    res = integrity.verifyAndExtract(message.decode(), conf.Conf().cert)
-    if res == None:
-        '''message certifivate is invalid, toast orange message'''
-        reactive_toast.value = ["A Message failed to pass integrity test", "warn"]
-    return res
+    try:
+        '''Verify the integrity of data and extract the message, else return None'''
+        res = integrity.verifyAndExtract(message.decode(), conf.Conf().cert)
+        if res == None:
+            '''message certifivate is invalid, toast orange message'''
+            reactive_toast.value = ["A Message failed to pass integrity test", "warn"]
+        return res
+    except:
+        print("Error verifying the data")
 
 
 # Passing train check - function that the GUI checks every second

@@ -17,7 +17,7 @@ The management node which is running the aggregator retrieves rail traffic data 
 ![data flow diagram](doc/diagrams/system_overview.png)  
 
 ### Sequence diagram
-![data flow diagram](doc/diagrams/Sequence_diagram.png)  
+![data flow diagram](doc/diagrams/system_sequence_diagram.png)  
   
 > - Sequence starts asynchronously from steps 1 to 2.
 > 1. Aggregator fetches data from Digitraffic.

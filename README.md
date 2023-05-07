@@ -19,16 +19,23 @@ The management node which is running the aggregator retrieves rail traffic data 
 ### Sequence diagram
 ![data flow diagram](doc/diagrams/Sequence_diagram.png)  
   
-> - Sequence starts asynchronously from steps 1 to 2
+> - Sequence starts asynchronously from steps 1 to 2.
 > 1. Aggregator fetches data from Digitraffic.
 > 2. Digitraffic responds with JSON data that is filtered and published at step 5. Since the operation is asynchronous, data is published regardless whether any display is running.
-> - From step 3 to 4, the display is selected to start
+> - From step 3 to 4, the display is selected to start.
 > 3. Display sends a ping event that includes a public key identifying itself for the Aggregator.
 > 4. Aggregator sends an acknowledgment message with its public key.
 > 5. Aggregator publishes the fetched train data to their corresponding topics.
 > 6. Display verifies that the data has come from the aggregator and not from any external will. 
-   > After that, the data is formatted into a form that the user interface can display
+   > After that, the data is formatted into a form that the user interface can display.
 > 7. The User interface updates its view as it receives the formatted data.
+> 8. User can choose to send announcements via Manager client.
+> 9. From the manager a message is published to "management/id/update" MQTT channel.
+> 10. Aggregator receives this update call and selects all announcements from the database.
+> 11. Aggregator receives the result set.
+> 12. All the announcements are published to displays.
+> 13. Display verifies that the data has come from the aggregator and not from any external will.
+> 14. The User interface updates its view as it receives the announcements.
 
 ### MQTT topic naming convention  
 Topic for train data
